@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>1095394074407-2jm9p0838pqg68gsusac4m38uh3qos71.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.1095394074407-2jm9p0838pqg68gsusac4m38uh3qos71</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>1095394074407-6dg3p2t8o0rpvkcf9ui1sso93dcbtcoi.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyCqisSukWz3L8z1zorE8nhT_Wgb-fDPKuQ</string>
+	<key>GCM_SENDER_ID</key>
+	<string>1095394074407</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.leaderboard.leaderboard</string>
+	<key>PROJECT_ID</key>
+	<string>movieszone-266e5</string>
+	<key>STORAGE_BUCKET</key>
+	<string>movieszone-266e5.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:1095394074407:ios:f4c413cea786fc12fe1302</string>
+	<key>DATABASE_URL</key>
+	<string>https://movieszone-266e5.firebaseio.com</string>
+</dict>
+</plist>

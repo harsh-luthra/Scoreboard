@@ -1,0 +1,151 @@
+{
+  "project_info": {
+    "project_number": "1095394074407",
+    "firebase_url": "https://movieszone-266e5.firebaseio.com",
+    "project_id": "movieszone-266e5",
+    "storage_bucket": "movieszone-266e5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1095394074407:android:20263cf79dc1a31bfe1302",
+        "android_client_info": {
+          "package_name": "com.example.leaderboard.leaderboard"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1095394074407-qdfvvfo0lujil1kh01j5kr16r9mu5vlv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXHYLx9hRtZgK0AvbRfNSPgArbu7TH3lQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1095394074407-qdfvvfo0lujil1kh01j5kr16r9mu5vlv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1095394074407:android:11bcf117d3c7ef0dfe1302",
+        "android_client_info": {
+          "package_name": "devesh.chaudhari.FirebaseWebRTC"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1095394074407-dechid84f49cfga5fnv00m5sucd0p7pj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "devesh.chaudhari.FirebaseWebRTC",
+            "certificate_hash": "cd6caaae045ac4ce66c8e15bfca54ed905397a4a"
+          }
+        },
+        {
+          "client_id": "1095394074407-qdfvvfo0lujil1kh01j5kr16r9mu5vlv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXHYLx9hRtZgK0AvbRfNSPgArbu7TH3lQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1095394074407-qdfvvfo0lujil1kh01j5kr16r9mu5vlv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1095394074407:android:4f32b96defb915cc",
+        "android_client_info": {
+          "package_name": "harshluthra.movieszone"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1095394074407-ekbc7gduvqmvbkd8vjrqhbbgbb7ekjj1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "harshluthra.movieszone",
+            "certificate_hash": "1eef395c6323c2ee5f45f9dde180814e1ad2052d"
+          }
+        },
+        {
+          "client_id": "1095394074407-qdfvvfo0lujil1kh01j5kr16r9mu5vlv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXHYLx9hRtZgK0AvbRfNSPgArbu7TH3lQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1095394074407-qdfvvfo0lujil1kh01j5kr16r9mu5vlv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1095394074407:android:52a5220a99d2676f",
+        "android_client_info": {
+          "package_name": "harshluthra.movieszoneadmin"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1095394074407-6dg3p2t8o0rpvkcf9ui1sso93dcbtcoi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "harshluthra.movieszoneadmin",
+            "certificate_hash": "1eef395c6323c2ee5f45f9dde180814e1ad2052d"
+          }
+        },
+        {
+          "client_id": "1095394074407-qdfvvfo0lujil1kh01j5kr16r9mu5vlv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXHYLx9hRtZgK0AvbRfNSPgArbu7TH3lQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1095394074407-qdfvvfo0lujil1kh01j5kr16r9mu5vlv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
