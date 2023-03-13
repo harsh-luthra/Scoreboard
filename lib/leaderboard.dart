@@ -1,7 +1,7 @@
 
 import 'dart:collection';
 import 'dart:convert';
-
+import 'package:universal_html/html.dart' as html;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -12,7 +12,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_core/firebase_core.dart' as fb;
 import 'package:leaderboard/board_obj.dart';
 
-List<String> FlagImages = ['assets/images/flag_1.png','assets/images/flag_2.png','assets/images/flag_3.png','assets/images/flag_5.png'];
+import 'leaderboard_control.dart';
+
 String SampleTest = "None";
 bool full = true;
 bool compact_mode = false;
@@ -20,47 +21,56 @@ bool compact_mode = false;
 List<board_obj> data = [];
 
 class leaderboard extends StatefulWidget {
-  leaderboard({Key? key}) : super(key: key);
+  static const String route = '/scores';
+  final String Event_Key;
+  leaderboard({Key? key, required this.Event_Key}) : super(key: key);
   @override
-  State<leaderboard> createState() => _leaderboardState();
+  State<leaderboard> createState() => _leaderboardState(EventKey: Event_Key);
 }
 
 class _leaderboardState extends State<leaderboard> {
+  var EventKey;
+  _leaderboardState({required this.EventKey});
   //List<String> data = ['USA', "ITM", "IND", "PTG"];
   List<String> listItems = ['USA', "ITM", "IND", "PTG"];
 
+  @override
   void initState() {
+    super.initState();
+    // /?event_key=1678711717666&route=scores
+    // String myurl = Uri.base.toString(); //get complete url
+    // String? event_key = Uri.base.queryParameters["event_key"]; //get parameter with attribute "para1"
+    // String? route = Uri.base.queryParameters["route"]; //get parameter with attribute "para2"
+    // print(myurl);
+    // print(event_key);
+    // print(route);
+    //html.window.location.href = "/?event_key=$EventKey&route=scores";
     // test_get();
+
+    data = [];
+
     DatabaseReference starCountRef =
-    FirebaseDatabase.instance.ref("leaderboard/002");
+    //FirebaseDatabase.instance.ref("leaderboard/003");
+    FirebaseDatabase.instance.ref("leaderboard/$EventKey");
     starCountRef.onValue.listen((DatabaseEvent event) {
-      final data_snap = event.snapshot.value;
+      print(event.snapshot.key);
+      final data_snap = event.snapshot.child("score_board").value;
+      //EventTitle = event.snapshot.child("title").value.toString();
       print(data_snap.toString());
       Iterable l = json.decode(data_snap.toString());
       List<board_obj> BoardObjects = List<board_obj>.from(l.map((model)=> board_obj.fromJson(model)));
-      setState(() {
-        if(data.isEmpty){
-          data = BoardObjects;
-          data.sort((a, b) => a.full_name.toString().compareTo(b.full_name.toString()));
-
-          data.sort((a, b) {
-            if (a.active == true && b.active == false) {
-              return -1;
-            } else if (a.active == false && b.active == true) {
-              return 1;
-            } else {
-              return 0;
-            }
-          });
-
-          //data = data.reversed.toList();
-        }
-        // Map<dynamic,dynamic> mapp = new HashMap();
-        // mapp = data as Map<dynamic,dynamic>;
-        // board_obj obj = mapp[0];
-        //  SampleTest = BoardObjects[0].full_name!;
-         test_single_value(BoardObjects);
-      });
+      if(mounted) {
+        setState(() {
+          if (data.isEmpty) {
+            Replace_data_to_New(BoardObjects);
+            sort_active();
+            data.sort((a, b) => b.score.compareTo(a.score));
+            //data.sort((a, b) => a.name.toString().compareTo(b.name.toString()));
+            //data = data.reversed.toList();
+          }
+          test_single_value(BoardObjects);
+        });
+      }
     });
   }
 
@@ -68,45 +78,29 @@ class _leaderboardState extends State<leaderboard> {
     if(data.length == BoardObjects.length){
       for(board_obj obj_have in data){
         for(board_obj obj_got in BoardObjects){
-          if(obj_have.full_name == obj_got.full_name){
+          if(obj_have.name == obj_got.name){
              if(obj_have.score != obj_got.score){
                 setState(() {
                   int indx = data.indexOf(obj_have);
                   data[indx].score = obj_got.score;
                   //data.sort((a, b) => a.score.toString().compareTo(b.score.toString()));.
+                  //sort_active();
                   data.sort((a, b) => b.score.compareTo(a.score));
-
-                  data.sort((a, b) {
-                      if(a.active == true && b.active == false){
-                        return -1;
-                      }else if(a.active == false && b.active == true){
-                        return 1;
-                      }else{
-                        return 0;
-                      }
-                      print(1.compareTo(2)); // => -1
-                      print(2.compareTo(1)); // => 1
-                      print(1.compareTo(1)); // => 0
-                  });
-
                   //data = data.reversed.toList();
                 });
+             }
+             if(obj_have.name != obj_got.name){
+               setState(() {
+                 int indx = data.indexOf(obj_have);
+                 data[indx].name = obj_got.name;
+               });
              }
              if(obj_have.active != obj_got.active){
                setState(() {
                  int indx = data.indexOf(obj_have);
                  data[indx].active = obj_got.active;
-
-                 data.sort((a, b) {
-                   if (a.active == true && b.active == false) {
-                     return -1;
-                   } else if (a.active == false && b.active == true) {
-                     return 1;
-                   } else {
-                     return 0;
-                   }
-                 });
-
+                 data.sort((a, b) => b.score.compareTo(a.score));
+                 sort_active();
                });
              }
              if(obj_have.selected != obj_got.selected){
@@ -115,22 +109,48 @@ class _leaderboardState extends State<leaderboard> {
                  data[indx].selected = obj_got.selected;
                });
              }
+          }else{
+            //Replace_data_to_New(BoardObjects);
           }
         }
       }
+    }else{
+      //Replace_data_to_New(BoardObjects);
     }
+  }
 
-    // if(data.isNotEmpty){
-    //   if(data[0].active == true){
-    //     setState(() {
-    //       data[0].active = false;
-    //     });
-    //   }else{
-    //     setState(() {
-    //       data[0].active = true;
-    //     });
-    //   }
-    // }
+  void Replace_data_to_New(List<board_obj>  BoardObjects){
+    setState(() {
+      data = BoardObjects;
+      data.sort((a, b) {
+        if (a.active == true && b.active == false) {
+          return -1;
+        } else if (a.active == false && b.active == true) {
+          return 1;
+        } else {
+          return 0;
+        }
+      });
+    });
+  }
+
+  void sort_score(){
+
+  }
+
+  void sort_active(){
+    data.sort((a, b) {
+      if(a.active == true && b.active == false){
+        return -1;
+      }else if(a.active == false && b.active == true){
+        return 1;
+      }else{
+        return 0;
+      }
+      print(1.compareTo(2)); // => -1
+      print(2.compareTo(1)); // => 1
+      print(1.compareTo(1)); // => 0
+    });
   }
 
   void test_get(){
@@ -152,10 +172,10 @@ class _leaderboardState extends State<leaderboard> {
       body: SafeArea(
         child: AnimatedContainer(
           duration: Duration(seconds: 1),
-          width: compact_mode ? device_width*0.8 : device_width *0.6,
+          width: !compact_mode ? device_width*0.8 : device_width *0.6,
           child: Column(
             children: [
-              SizedBox(height: 200,),
+              SizedBox(height: 50,),
               ElevatedButton(
                   onPressed: () {
                     //SET_DATA();
@@ -263,12 +283,12 @@ Widget Stacked_Score_Data(index,board_obj data_obj, Color Active_Color){
                   height: 40,
                   decoration: BoxDecoration(
                     image:
-                    DecorationImage(image: AssetImage(FlagImages[0]), fit: BoxFit.scaleDown),
+                    DecorationImage(image: AssetImage('assets/images/${data_obj.flagImgName}.png'), fit: BoxFit.scaleDown),
                   )),
               const SizedBox(
                 width: 10,
               ),
-              Text(compact_mode == true ? " ${data_obj.full_name}" : " ${data_obj.small_name}"),
+              Text(compact_mode != true ? " ${data_obj.name}" : " ${data_obj.country}"),
               const SizedBox(
                 width: 10,
               ),
@@ -294,23 +314,17 @@ Widget Stacked_Score_Data(index,board_obj data_obj, Color Active_Color){
 void SET_DATA () async{
   FirebaseDatabase database = FirebaseDatabase.instance;
   DatabaseReference ref = FirebaseDatabase.instance.ref("leaderboard/002");
-  board_obj obj = board_obj("HARSH0", "HSH", 100, true,true, "icon_name");
-  board_obj obj1 = board_obj("HARSH1", "HSH", 100, false,false, "icon_name");
-  board_obj obj2 = board_obj("HARSH2", "HSH", 100, false,false, "icon_name");
-  board_obj obj3 = board_obj("HARSH3", "HSH", 100, false,false, "icon_name");
-  board_obj obj4 = board_obj("HARSH4", "HSH", 100, false,false, "icon_name");
-  board_obj obj5 = board_obj("HARSH5", "HSH", 100, false,false, "icon_name");
-  board_obj obj6 = board_obj("HARSH6", "HSH", 100, false,false, "icon_name");
-  board_obj obj7 = board_obj("HARSH7", "HSH", 100, false,false, "icon_name");
+  board_obj obj = board_obj("Sharp", "USA", 100, false,false, "flag_usa");
+  board_obj obj1 = board_obj("McKeegan", "Ireland", 100, false,false, "flag_ireland");
+  board_obj obj2 = board_obj("Miroshnik", "Russia", 100, false,false, "flag_russia");
+  board_obj obj3 = board_obj("Hughes", "USA", 100, false,false, "flag_usa");
+  board_obj obj4 = board_obj("Maze", "Canada", 100, false,false, "flag_canada");
   List <board_obj> boardObjects = [];
   boardObjects.add(obj);
   boardObjects.add(obj1);
   boardObjects.add(obj2);
   boardObjects.add(obj3);
   boardObjects.add(obj4);
-  boardObjects.add(obj5);
-  boardObjects.add(obj6);
-  boardObjects.add(obj7);
   //boardObjects = boardObjects.reversed.toList();
   var json = jsonEncode(boardObjects.map((e) => e.toJson()).toList());
   print(boardObjects.toString());
@@ -330,79 +344,4 @@ void SET_DATA () async{
   //     "line1": "100 Mountain View"
   //   }
   // });
-}
-
-Widget ScoreData(D_Width, Score, data, active) {
-  int index = data.indexOf(Score);
-  double? item_width = D_Width;
-  Color? Active_Color = Colors.grey;
-  Color? Not_Played_Color = Color.fromARGB(0, 255, 255, 255);
-  if (Score == "5") {
-    item_width = D_Width * 0.8;
-    Active_Color = Colors.lightBlue;
-  } else {
-    item_width = D_Width;
-    Not_Played_Color = Color.fromARGB(150, 255, 255, 255);
-  }
-  return Column(
-    children: [
-      Container(
-        decoration: BoxDecoration(color: Active_Color),
-        margin: EdgeInsets.only(left: 10, right: 10),
-        width: item_width,
-        height: 50,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Text(" ${index + 1}"),
-                    const SizedBox(
-                      width: 10,
-                    ),
-                    Container(
-                        width: D_Width! * 0.08,
-                        height: D_Width! * 0.04,
-                        decoration: BoxDecoration(
-                          image:
-                          DecorationImage(image: AssetImage(FlagImages[index]), fit: BoxFit.scaleDown),
-                        )),
-                    const SizedBox(
-                      width: 10,
-                    ),
-                    Text(" $Score"),
-                    const SizedBox(
-                      width: 10,
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    Text(" $Score'",textAlign: TextAlign.start),
-                    const SizedBox(width: 25,),
-                  ],
-                ),
-              ],
-            ),
-            Container(
-              width: item_width,
-              height: 50,
-              decoration: BoxDecoration(color: Not_Played_Color),
-            ),
-          ],
-        ),
-      ),
-      SizedBox(
-        height: 10,
-      )
-    ],
-  );
 }

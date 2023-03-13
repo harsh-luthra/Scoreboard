@@ -16,39 +16,49 @@ List<String> FlagImages = ['assets/images/flag_1.png','assets/images/flag_2.png'
 String SampleTest = "None";
 bool full = true;
 
+String? EventKey;
+String? EventTitle = "";
+
 List<board_obj> data = [];
 
 class leaderboard_control extends StatefulWidget {
-  leaderboard_control({Key? key}) : super(key: key);
+  static const String route = '/control';
+  final String Event_Key;
+  leaderboard_control({Key? key, required this.Event_Key}) : super(key: key);
   @override
-  State<leaderboard_control> createState() => _leaderboardControlState();
+  State<leaderboard_control> createState() => _leaderboardControlState(Event_Keygot: Event_Key);
 }
 
 class _leaderboardControlState extends State<leaderboard_control> {
+   var Event_Keygot;
+   _leaderboardControlState({required this.Event_Keygot});
   //List<String> data = ['USA', "ITM", "IND", "PTG"];
   List<String> listItems = ['USA', "ITM", "IND", "PTG"];
 
+  @override
   void initState() {
+    super.initState();
+    EventKey = Event_Keygot;
+    data = [];
     // test_get();
     DatabaseReference starCountRef =
-    FirebaseDatabase.instance.ref("leaderboard/002");
+    FirebaseDatabase.instance.ref("leaderboard/$EventKey");
     starCountRef.onValue.listen((DatabaseEvent event) {
-      final data_snap = event.snapshot.value;
+      print(event.snapshot.key);
+      final data_snap = event.snapshot.child("score_board").value;
+      EventTitle = event.snapshot.child("title").value.toString();
       print(data_snap.toString());
       Iterable l = json.decode(data_snap.toString());
       List<board_obj> BoardObjects = List<board_obj>.from(l.map((model)=> board_obj.fromJson(model)));
-      setState(() {
-        if(data.isEmpty){
-          data = BoardObjects;
-          data.sort((a, b) => a.full_name.toString().compareTo(b.full_name.toString()));
-          //data = data.reversed.toList();
-        }
-        // Map<dynamic,dynamic> mapp = new HashMap();
-        // mapp = data as Map<dynamic,dynamic>;
-        // board_obj obj = mapp[0];
-        //  SampleTest = BoardObjects[0].full_name!;
-         test_single_value(BoardObjects);
-      });
+      if(mounted) {
+        setState(() {
+          if (data.isEmpty) {
+            data = BoardObjects;
+            data.sort((a, b) => a.name.toString().compareTo(b.name.toString()));
+          }
+          test_single_value(BoardObjects);
+        });
+      }
     });
   }
 
@@ -56,7 +66,7 @@ class _leaderboardControlState extends State<leaderboard_control> {
     if(data.length == BoardObjects.length){
       for(board_obj obj_have in data){
         for(board_obj obj_got in BoardObjects){
-          if(obj_have.full_name == obj_got.full_name){
+          if(obj_have.name == obj_got.name){
              if(obj_have.score != obj_got.score){
                 setState(() {
                   int indx = data.indexOf(obj_have);
@@ -117,28 +127,20 @@ class _leaderboardControlState extends State<leaderboard_control> {
           width: full ? device_width : device_width *0.6,
           child: Column(
             children: [
-              ElevatedButton(
-                  onPressed: () {
-                    SET_DATA();
-                    setState(() {
-                      data.sort((a, b) => a.score.toString().compareTo(b.score.toString()));
-                      //data = data.reversed.toList();
-                      //full = !full;
-                      //data.shuffle();
-                    });
-                  },
-                  child: Text("SET DATA")),
-              ElevatedButton(
-                  onPressed: () {
-                    //SET_DATA();
-                    setState(() {
-                      //data.sort((a, b) => a.toString().compareTo(b.toString()));
-                      //data = data.reversed.toList();
-                      //full = !full;
-                      //data.shuffle();
-                    });
-                  },
-                  child: Text("GET DATA")),
+              SizedBox(height: 10,),
+              Text("Event Score Editor",style: TextStyle(fontSize: 25),),
+              SizedBox(height: 10,),
+              Container(
+                  margin: const EdgeInsets.all(25),
+                  alignment: Alignment.center,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Icon(Icons.arrow_back_ios_new_rounded,size: 40,),
+                  )),
+              Text(EventTitle!,style: TextStyle(fontSize: 25),),
+              SizedBox(height: 10,),
               Expanded(
                 child: ImplicitlyAnimatedList<board_obj>(
                     itemData: data,
@@ -160,7 +162,7 @@ class _leaderboardControlState extends State<leaderboard_control> {
     Color? Active_Color = Color.fromARGB(0, 255, 255, 255);
 
     if (data_obj.active == true) {
-      item_width = D_Width;
+      item_width = 600;
       Active_Color = Color.fromARGB(0, 255, 255, 255);
 
       if (data_obj.selected == true) {
@@ -170,117 +172,143 @@ class _leaderboardControlState extends State<leaderboard_control> {
       }
 
     } else {
-      item_width = D_Width * 0.8;
+      item_width = 450;
       Active_Color = Color.fromARGB(150, 255, 255, 255);
     }
     //item_width = full ? D_Width * 0.8 : D_Width;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.start,
-      mainAxisSize: MainAxisSize.max,
-      children: [
-        AnimatedContainer(
-          duration: Duration(seconds: 1),
-          decoration: BoxDecoration(color: Selected_Color),
-          margin: EdgeInsets.only(left: 10, right: 10),
-          width: item_width,
-          height: 50,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      Text(" ${index + 1}"),
-                      const SizedBox(
-                        width: 10,
-                      ),
-                      Container(
-                          width: 30,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            image:
-                            DecorationImage(image: AssetImage(FlagImages[0]), fit: BoxFit.scaleDown),
-                          )),
-                      const SizedBox(
-                        width: 10,
-                      ),
-                      Text(" ${data_obj.full_name}"),
-                      const SizedBox(
-                        width: 10,
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Text("${data_obj.score}",textAlign: TextAlign.start),
-                      const SizedBox(width: 25,),
-                    ],
-                  ),
-                ],
-              ),
-              Container(
-                // width: item_width,
-                height: 50,
-                decoration: BoxDecoration(color: Active_Color),
-              ),
-            ],
+    return Center(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          AnimatedContainer(
+            duration: Duration(seconds: 1),
+            decoration: BoxDecoration(color: Selected_Color),
+            margin: EdgeInsets.only(left: 10, right: 10),
+            width: item_width,
+            height: 100,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        Text(" ${index + 1}",style: TextStyle(fontSize: 25),),
+                        const SizedBox(
+                          width: 20,
+                        ),
+                        Container(
+                            width: 100,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              image:
+                              DecorationImage(image: AssetImage('assets/images/${data_obj.flagImgName}.png'), fit: BoxFit.fill),
+                            )),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        Text(" ${data_obj.name}",style: TextStyle(fontSize: 25),),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text("${data_obj.score}",textAlign: TextAlign.start),
+                        const SizedBox(width: 25,),
+                      ],
+                    ),
+                  ],
+                ),
+                Container(
+                  // width: item_width,
+                  height: 100,
+                  decoration: BoxDecoration(color: Active_Color),
+                ),
+              ],
+            ),
           ),
-        ),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            ElevatedButton(onPressed: (){
-                bool? active_val = data[index].active;
-                data[index].active = !active_val!;
-                Update_data();
-            }, child: Icon(data[index].active == true ? Icons.check_box : Icons.check_box_outline_blank) ),
-            ElevatedButton(onPressed: () async {
-              bool? selected_val = data[index].selected;
-              data[index].active = true;
-              Update_data();
-              data[index].selected = !selected_val!;
-              Update_data();
-            }, child: Text("Select")),
-            ElevatedButton(onPressed: () async {
-              int? score = data[index].score;
-              data[index].score = (score!+50);
-              Update_data();
-            }, child: Text("+50")),
-            ElevatedButton(onPressed: () async {
-              int? score = data[index].score;
-              data[index].score = (score!-50);
-              print(data[index].score);
-              if((data[index].score!) < 0){
-                data[index].score = 0;
-              }
-              print(data[index].score);
-              Update_data();
-            }, child: Text("-50")),
-          ],
-        ),
-        SizedBox(
-          height: 10,
-        )
-      ],
+          SizedBox(height: 15,),
+          Container(
+            width: 400,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                ElevatedButton(onPressed: (){
+                    bool? active_val = data[index].active;
+                    data[index].active = !active_val!;
+                    Update_data();
+                }, child: Icon(data[index].active == true ? Icons.check_box : Icons.check_box_outline_blank) ),
+                ElevatedButton(onPressed: () async {
+                  bool? selected_val = data[index].selected;
+                  bool? active_val = data[index].active;
+                  //if(active_val == false){
+                    if(selected_val == true){
+                      data[index].selected = false;
+                    }else{
+                      data[index].selected = true;
+                    }
+                    data[index].selected = true;
+                    data[index].active = true;
+                    for(board_obj obj in data){
+                      int index_in = data.indexOf(obj);
+                      if(index_in != index){
+                        data[index_in].selected = false;
+                      }else{
+                        //data[index_in].selected = true;
+                      }
+                    }
+                  // }else{
+                  //   //data[index].selected = !selected_val!;
+                  // }
+                  Update_data();
+                }, child: Text(data[index].selected == true ? "Selected" : "Select")),
+                ElevatedButton(onPressed: () async {
+                  int? score = data[index].score;
+                  data[index].score = (score!+50);
+                  Update_data();
+                }, child: Text("+50")),
+                ElevatedButton(onPressed: () async {
+                  int? score = data[index].score;
+                  data[index].score = (score!-50);
+                  print(data[index].score);
+                  if((data[index].score!) < 0){
+                    data[index].score = 0;
+                  }
+                  print(data[index].score);
+                  Update_data();
+                }, child: Text("-50")),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 10,
+          )
+        ],
+      ),
     );
   }
 }
 
 Future<bool> Update_data() async{
-  DatabaseReference ref = FirebaseDatabase.instance.ref("leaderboard/002");
+  DatabaseReference ref = FirebaseDatabase.instance.ref("leaderboard");
   bool success= false;
   var json = jsonEncode(data.map((e) => e.toJson()).toList());
-  await ref.set(json).then((_) {
+  await ref.child("$EventKey").child("score_board").set(json).then((_) {
      success = true;
   }).catchError((error) {
      success = false;
@@ -294,24 +322,18 @@ Future<bool> Update_data() async{
 
 void SET_DATA () async{
   FirebaseDatabase database = FirebaseDatabase.instance;
-  DatabaseReference ref = FirebaseDatabase.instance.ref("leaderboard/002");
-  board_obj obj = board_obj("HARSH0", "HSH", 100, true,true, "icon_name");
-  board_obj obj1 = board_obj("HARSH1", "HSH", 100, false,false, "icon_name");
-  board_obj obj2 = board_obj("HARSH2", "HSH", 100, false,false, "icon_name");
-  board_obj obj3 = board_obj("HARSH3", "HSH", 100, false,false, "icon_name");
-  board_obj obj4 = board_obj("HARSH4", "HSH", 100, false,false, "icon_name");
-  board_obj obj5 = board_obj("HARSH5", "HSH", 100, false,false, "icon_name");
-  board_obj obj6 = board_obj("HARSH6", "HSH", 100, false,false, "icon_name");
-  board_obj obj7 = board_obj("HARSH7", "HSH", 100, false,false, "icon_name");
+  DatabaseReference ref = FirebaseDatabase.instance.ref("leaderboard");
+  board_obj obj = board_obj("Sharp", "USA", 0, false,false, "flag_usa");
+  board_obj obj1 = board_obj("McKeegan", "Ireland", 0, false,false, "flag_ireland");
+  board_obj obj2 = board_obj("Miroshnik", "Russia", 0, false,false, "flag_russia");
+  board_obj obj3 = board_obj("Hughes", "USA", 0, false,false, "flag_usa");
+  board_obj obj4 = board_obj("Maze", "Canada", 0, false,false, "flag_canada");
   List <board_obj> boardObjects = [];
   boardObjects.add(obj);
   boardObjects.add(obj1);
   boardObjects.add(obj2);
   boardObjects.add(obj3);
   boardObjects.add(obj4);
-  boardObjects.add(obj5);
-  boardObjects.add(obj6);
-  boardObjects.add(obj7);
   boardObjects = boardObjects.reversed.toList();
   var json = jsonEncode(boardObjects.map((e) => e.toJson()).toList());
   print(boardObjects.toString());
@@ -320,7 +342,7 @@ void SET_DATA () async{
   // mapp[1] = boardObjects[1].toJson();
   // mapp[2] = boardObjects[2].toJson();
 
-  ref.set(json);
+  ref.child("$EventKey").child("score_board").set(json);
   // await ref.set({
   //   obj.toJson()
   // });
