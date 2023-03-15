@@ -20,6 +20,14 @@ bool compact_mode = false;
 
 List<board_obj> data = [];
 
+final List<String> event_data_types = [
+  "Reps",
+  "Reps,Time",
+  "Distance,Time",
+];
+
+String selectedEventDatatype = "Reps";
+
 class leaderboard extends StatefulWidget {
   static const String route = '/scores';
   final String Event_Key;
@@ -53,18 +61,29 @@ class _leaderboardState extends State<leaderboard> {
     //FirebaseDatabase.instance.ref("leaderboard/003");
     FirebaseDatabase.instance.ref("leaderboard/$EventKey");
     starCountRef.onValue.listen((DatabaseEvent event) {
-      print(event.snapshot.key);
-      final data_snap = event.snapshot.child("score_board").value;
-      //EventTitle = event.snapshot.child("title").value.toString();
-      print(data_snap.toString());
-      Iterable l = json.decode(data_snap.toString());
-      List<board_obj> BoardObjects = List<board_obj>.from(l.map((model)=> board_obj.fromJson(model)));
+
+      Iterable childs = event.snapshot.child("score_board").children;
+
+      List<board_obj> BoardObjects = [];
+      for(DataSnapshot snap in childs){
+        print(snap.value.toString());
+        Map<String,dynamic> temp_map = HashMap();
+        snap.children.forEach((element) {
+          temp_map[element.key.toString()] = element.value;
+        });
+        BoardObjects.add(board_obj.fromJson(temp_map));
+        for(DataSnapshot snap_c in snap.children){
+          print("${snap_c.key.toString()} = ${snap_c.value.toString()}");
+        }
+      }
+
       if(mounted) {
         setState(() {
           if (data.isEmpty) {
+            selectedEventDatatype = event.snapshot.child("type").value.toString();
             Replace_data_to_New(BoardObjects);
             sort_active();
-            data.sort((a, b) => b.score.compareTo(a.score));
+            data.sort((a, b) => b.reps.compareTo(a.reps));
             //data.sort((a, b) => a.name.toString().compareTo(b.name.toString()));
             //data = data.reversed.toList();
           }
@@ -78,28 +97,58 @@ class _leaderboardState extends State<leaderboard> {
     if(data.length == BoardObjects.length){
       for(board_obj obj_have in data){
         for(board_obj obj_got in BoardObjects){
-          if(obj_have.name == obj_got.name){
-             if(obj_have.score != obj_got.score){
+          if(obj_have.id == obj_got.id){
+             if(obj_have.reps != obj_got.reps){
                 setState(() {
                   int indx = data.indexOf(obj_have);
-                  data[indx].score = obj_got.score;
+                  data[indx].reps = obj_got.reps;
                   //data.sort((a, b) => a.score.toString().compareTo(b.score.toString()));.
                   //sort_active();
-                  data.sort((a, b) => b.score.compareTo(a.score));
+                  //data.sort((a, b) => b.reps.compareTo(a.reps));
+                  sortByDataType();
                   //data = data.reversed.toList();
                 });
              }
-             if(obj_have.name != obj_got.name){
+             if(obj_have.distance != obj_got.distance){
                setState(() {
                  int indx = data.indexOf(obj_have);
-                 data[indx].name = obj_got.name;
+                 data[indx].distance = obj_got.distance;
+                 sortByDataType();
+                 //data.sort((a, b) => b.reps.compareTo(a.reps));
+               });
+             }
+             if(obj_have.time != obj_got.time){
+               setState(() {
+                 int indx = data.indexOf(obj_have);
+                 data[indx].time = obj_got.time;
+                 sortByDataType();
+                 //data.sort((a, b) => b.reps.compareTo(a.reps));
+               });
+             }
+             if(obj_have.score != obj_got.score){
+               setState(() {
+                 int indx = data.indexOf(obj_have);
+                 data[indx].score = obj_got.score;
+                 //data.sort((a, b) => b.reps.compareTo(a.reps));
+               });
+             }
+             if(obj_have.total != obj_got.total){
+               setState(() {
+                 int indx = data.indexOf(obj_have);
+                 data[indx].total = obj_got.total;
+               });
+             }
+             if(obj_have.place != obj_got.place){
+               setState(() {
+                 int indx = data.indexOf(obj_have);
+                 data[indx].place = obj_got.place;
                });
              }
              if(obj_have.active != obj_got.active){
                setState(() {
                  int indx = data.indexOf(obj_have);
                  data[indx].active = obj_got.active;
-                 data.sort((a, b) => b.score.compareTo(a.score));
+                 data.sort((a, b) => b.reps.compareTo(a.reps));
                  sort_active();
                });
              }
@@ -116,6 +165,19 @@ class _leaderboardState extends State<leaderboard> {
       }
     }else{
       //Replace_data_to_New(BoardObjects);
+    }
+  }
+
+  void sortByDataType(){
+    // Need to Fix Sort By with Time Logic
+    if(selectedEventDatatype == event_data_types[1]){ // REPS TIME
+      data.sort((a, b) => b.reps.compareTo(a.reps));
+      data.sort((a, b) => b.time.compareTo(a.time));
+    }else if(selectedEventDatatype == event_data_types[2]){  // DISTANCE TIME
+      data.sort((a, b) => b.distance.compareTo(a.distance));
+      data.sort((a, b) => b.time.compareTo(a.time));
+    }else{ // REPS
+      data.sort((a, b) => b.reps.compareTo(a.reps));
     }
   }
 
@@ -238,7 +300,7 @@ Widget ScoreData_anim(D_Width, board_obj data_obj) {
   //item_width = full ? D_Width * 0.8 : D_Width;
   return Column(
     children: [
-      data_obj.score == 0 ? AnimatedContainer(
+      data_obj.reps == 0 ? AnimatedContainer(
         duration: Duration(seconds: data_obj.active == true ? 1 : 0 ),
         decoration: BoxDecoration(color: Selected_Color),
         margin: EdgeInsets.only(left: 10, right: 10),
@@ -296,7 +358,7 @@ Widget Stacked_Score_Data(index,board_obj data_obj, Color Active_Color){
           ),
           Row(
             children: [
-              Text(data_obj.active == true ? " ${data_obj.score}" : "",textAlign: TextAlign.start),
+              Text(data_obj.active == true ? " ${data_obj.reps}" : "",textAlign: TextAlign.start),
               const SizedBox(width: 25,),
             ],
           ),
@@ -314,11 +376,11 @@ Widget Stacked_Score_Data(index,board_obj data_obj, Color Active_Color){
 void SET_DATA () async{
   FirebaseDatabase database = FirebaseDatabase.instance;
   DatabaseReference ref = FirebaseDatabase.instance.ref("leaderboard/002");
-  board_obj obj = board_obj("Sharp", "USA", 100, false,false, "flag_usa");
-  board_obj obj1 = board_obj("McKeegan", "Ireland", 100, false,false, "flag_ireland");
-  board_obj obj2 = board_obj("Miroshnik", "Russia", 100, false,false, "flag_russia");
-  board_obj obj3 = board_obj("Hughes", "USA", 100, false,false, "flag_usa");
-  board_obj obj4 = board_obj("Maze", "Canada", 100, false,false, "flag_canada");
+  board_obj obj = board_obj(0,"Sharp", "USA", 0, 0,0,0,0,0,false,false, "flag_usa");
+  board_obj obj1 = board_obj(1,"McKeegan", "Ireland", 0, 0,0,0,0,0,false,false, "flag_ireland");
+  board_obj obj2 = board_obj(2,"Miroshnik", "Russia", 0, 0,0,0,0,0, false,false, "flag_russia");
+  board_obj obj3 = board_obj(3,"Hughes", "USA", 0, 0,0,0,0,0,false,false, "flag_usa");
+  board_obj obj4 = board_obj(4,"Maze", "Canada", 0, 0,0,0,0,0,false,false, "flag_canada");
   List <board_obj> boardObjects = [];
   boardObjects.add(obj);
   boardObjects.add(obj1);
@@ -334,14 +396,4 @@ void SET_DATA () async{
   // mapp[2] = boardObjects[2].toJson();
 
   ref.set(json);
-  // await ref.set({
-  //   obj.toJson()
-  // });
-  // await ref.set({
-  //   "name": "John",
-  //   "age": 18,
-  //   "address": {
-  //     "line1": "100 Mountain View"
-  //   }
-  // });
 }

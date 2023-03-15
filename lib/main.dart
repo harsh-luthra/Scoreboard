@@ -71,7 +71,8 @@ class MyApp_1 extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
         // home: leaderboard_all_list(),
-        initialRoute: 'allevents',
+        //initialRoute: 'allevents',
+        initialRoute: 'gridControl',
         onGenerateRoute: FluroRouterR.router.generator);
   }
 }

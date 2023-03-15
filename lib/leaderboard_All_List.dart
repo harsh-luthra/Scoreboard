@@ -1,18 +1,26 @@
 
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:implicitly_animated_list/implicitly_animated_list.dart';
+import 'package:leaderboard/Grid_Control_Scores.dart';
 import 'package:leaderboard/leaderboard.dart';
 import 'package:leaderboard/leaderboard_control.dart';
 
 import 'package:leaderboard/leaderboard_creator.dart';
 
-// import 'dart:html' as html;
 import 'package:universal_html/html.dart' as html;
+
+import 'board_obj.dart';
+
+final List<String> event_data_types = [
+  "Reps",
+  "Reps,Time",
+  "Distance,Time",
+];
 
 class leaderboard_all_list extends StatefulWidget {
   static const String route = '/all_events';
@@ -27,8 +35,9 @@ class _leaderboardAllListState extends State<leaderboard_all_list> {
 
   @override
   void initState() {
-    super.initState();
     Load_List_OF_DATA();
+    super.initState();
+    //Load_List_OF_DATA();
   }
 
   void Load_List_OF_DATA() async{
@@ -40,7 +49,18 @@ class _leaderboardAllListState extends State<leaderboard_all_list> {
       All_Event_Keys = [];
       print(snapshot.key);
       Iterable allData = snapshot.children;
+      if(allData.length == 1){
+        DataSnapshot dt = allData.first as DataSnapshot;
+        if(dt.key == "sample"){
+          ShowSnackBar('No data available.');
+          print('No data available.');
+          return;
+        }
+      }
       for(DataSnapshot snap in allData){
+        if(snap.key! == "sample" || snap.key! == "null"){
+          continue;
+        }
         All_Event_Keys.add(snap.key!);
         All_Event_Titles.add(snap.child("title").value.toString());
       }
@@ -81,6 +101,7 @@ class _leaderboardAllListState extends State<leaderboard_all_list> {
                   ElevatedButton(
                       onPressed: () {
                         addNewEvent();
+                        //Update_data_TEST();
                       },
                       child: const Icon(Icons.add,size: 40,)),
                   const SizedBox(width: 25,),
@@ -106,6 +127,40 @@ class _leaderboardAllListState extends State<leaderboard_all_list> {
     );
   }
 
+  Future<bool> Update_data_TEST() async{
+    DatabaseReference ref = FirebaseDatabase.instance.ref("leaderboard_test");
+    bool success= false;
+    //var json = jsonEncode(BoardObjects.map((e) => e.toJson()).toList());
+    Map<String,dynamic> maptest = HashMap();
+
+    List<board_obj> board_objS = [];
+
+    board_obj obj = board_obj(0,"Harsh", "USA01", 0, 0,0,0,0,0,false, false, "flag_usa");
+    board_obj obj1 = board_obj(1,"McKeegan", "Ireland", 0, 0,0,0,0,0,false, false, "flag_ireland");
+    board_obj obj2 = board_obj(2,"Miron's", "Russia", 0, 0,0,0,0,0,false, false, "flag_russia");
+    board_obj obj3 = board_obj(3,"Hughes", "UK", 0, 0,0,0,0,0,false, false, "flag_uk");
+    board_obj obj4 = board_obj(4,"Rahul", "Canada", 0, 0,0,0,0,0,false, false, "flag_czech_republic");
+    board_obj obj5 = board_obj(5,"Maze", "Czech_Republic", 0, 0,0,0,0,0,false, false, "flag_canada");
+
+    board_objS.add(obj);
+    board_objS.add(obj1);
+    board_objS.add(obj2);
+    board_objS.add(obj3);
+    board_objS.add(obj4);
+    board_objS.add(obj5);
+
+    for(board_obj obj_ in board_objS){
+      maptest[obj_.flagImgName!] = obj_.toJson();
+    }
+
+    await ref.child("test").child("score_board").set(maptest).then((_) {
+      success = true;
+    }).catchError((error) {
+      success = false;
+    });
+    return true;
+  }
+
   Widget Show_List_of_Events(double deviceWidth, String title){
     int index = All_Event_Titles.indexOf(title);
     print(title);
@@ -128,15 +183,16 @@ class _leaderboardAllListState extends State<leaderboard_all_list> {
             width: 600,
             padding: const EdgeInsets.all(15),
             margin: const EdgeInsets.all(5),
-            child: Row(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               mainAxisSize: MainAxisSize.max,
               children: [
-                Text(title,style: const TextStyle(fontSize: 25)),
+                Text(title,style: const TextStyle(fontSize: 25),textAlign: TextAlign.center,),
+                SizedBox(height: 10,),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.max,
                   children: [
                     ElevatedButton(
@@ -144,16 +200,7 @@ class _leaderboardAllListState extends State<leaderboard_all_list> {
                       onPressed: () {
                       print(All_Event_Keys[index]);
                         //Navigator.pushNamed(context, leaderboard_creator.route,arguments: {"got_is_Editing":true,"got_MainKey": All_Event_Keys[index]});
-                        if(kIsWeb){
-                          html.window.location.href = "#editor?event_key=${All_Event_Keys[index]}&editing=true";
-                        }else{
-                          // scores?event_key=1678711717666&route=scores
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => leaderboard_creator(got_is_Editing: true,got_MainKey: All_Event_Keys[index],),
-                              ));
-                        }
+                        openEditor(index);
                       },
                       child: const Icon(Icons.edit,size: 25,),
                     ),
@@ -164,6 +211,24 @@ class _leaderboardAllListState extends State<leaderboard_all_list> {
                         Open_Score_Editor(index);
                       },
                       child: const Icon(Icons.settings,size: 25,),
+                    ),
+
+                    const SizedBox(width: 5,),
+                    ElevatedButton(
+                      style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.purple)),
+                      onPressed: () {
+                        if(kIsWeb){
+                          //html.window.location.href = "#scores?event_key=${All_Event_Keys[index]}&route=scores";
+                          html.window.open('${Uri.base.origin}/#gridControl?event_key=${All_Event_Keys[index]}&route=scores',"_blank");
+                        }else{
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => GridControlScores(Event_Key: All_Event_Keys[index]),
+                              ));
+                        }
+                      },
+                      child: const Icon(Icons.app_registration_rounded,size: 25,),
                     ),
                     const SizedBox(width: 5,),
                     ElevatedButton(
@@ -198,6 +263,22 @@ class _leaderboardAllListState extends State<leaderboard_all_list> {
         ],
       ),
     );
+  }
+
+  void openEditor(int index) async{
+    if(kIsWeb){
+      html.window.location.href = "#editor?event_key=${All_Event_Keys[index]}&editing=true";
+    }else{
+      // scores?event_key=1678711717666&route=scores
+      String refresh = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => leaderboard_creator(got_is_Editing: true,got_MainKey: All_Event_Keys[index],),
+          ));
+      if(refresh == "refresh"){
+        Load_List_OF_DATA();
+      }
+    }
   }
 
   void deleteConfirmation(int index){
@@ -239,7 +320,7 @@ class _leaderboardAllListState extends State<leaderboard_all_list> {
 
   void addNewEvent(){
     if(kIsWeb){
-      html.window.location.href = "#editor?event_key=${All_Event_Keys[0]}&editing=false";
+      html.window.location.href = "#editor?event_key=sample&editing=false";
     }else{
       Navigator.push(
           context,

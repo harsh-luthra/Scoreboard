@@ -21,6 +21,12 @@ String? EventTitle = "";
 
 List<board_obj> data = [];
 
+final List<String> event_data_types = [
+  "Reps",
+  "Reps,Time",
+  "Distance,Time",
+];
+
 class leaderboard_control extends StatefulWidget {
   static const String route = '/control';
   final String Event_Key;
@@ -44,17 +50,29 @@ class _leaderboardControlState extends State<leaderboard_control> {
     DatabaseReference starCountRef =
     FirebaseDatabase.instance.ref("leaderboard/$EventKey");
     starCountRef.onValue.listen((DatabaseEvent event) {
-      print(event.snapshot.key);
-      final data_snap = event.snapshot.child("score_board").value;
+
       EventTitle = event.snapshot.child("title").value.toString();
-      print(data_snap.toString());
-      Iterable l = json.decode(data_snap.toString());
-      List<board_obj> BoardObjects = List<board_obj>.from(l.map((model)=> board_obj.fromJson(model)));
+
+      Iterable childs = event.snapshot.child("score_board").children;
+
+      List<board_obj> BoardObjects = [];
+      for(DataSnapshot snap in childs){
+        print(snap.value.toString());
+        Map<String,dynamic> temp_map = HashMap();
+        snap.children.forEach((element) {
+          temp_map[element.key.toString()] = element.value;
+        });
+        BoardObjects.add(board_obj.fromJson(temp_map));
+        // for(DataSnapshot snap_c in snap.children){
+        //   print("${snap_c.key.toString()} = ${snap_c.value.toString()}");
+        // }
+      }
+
       if(mounted) {
         setState(() {
           if (data.isEmpty) {
             data = BoardObjects;
-            data.sort((a, b) => a.name.toString().compareTo(b.name.toString()));
+            data.sort((a, b) => a.id.compareTo(b.id));
           }
           test_single_value(BoardObjects);
         });
@@ -67,12 +85,12 @@ class _leaderboardControlState extends State<leaderboard_control> {
       for(board_obj obj_have in data){
         for(board_obj obj_got in BoardObjects){
           if(obj_have.name == obj_got.name){
-             if(obj_have.score != obj_got.score){
+             if(obj_have.reps != obj_got.reps){
                 setState(() {
                   int indx = data.indexOf(obj_have);
-                  data[indx].score = obj_got.score;
-                  data.sort((a, b) => a.score.toString().compareTo(b.score.toString()));
-                  data = data.reversed.toList();
+                   data[indx].reps = obj_got.reps;
+                  // data.sort((a, b) => a.score.toString().compareTo(b.score.toString()));
+                  //data = data.reversed.toList();
                 });
              }
              if(obj_have.active != obj_got.active){
@@ -226,7 +244,7 @@ class _leaderboardControlState extends State<leaderboard_control> {
                     ),
                     Row(
                       children: [
-                        Text("${data_obj.score}",textAlign: TextAlign.start),
+                        Text("${data_obj.reps}",textAlign: TextAlign.start),
                         const SizedBox(width: 25,),
                       ],
                     ),
@@ -278,18 +296,18 @@ class _leaderboardControlState extends State<leaderboard_control> {
                   Update_data();
                 }, child: Text(data[index].selected == true ? "Selected" : "Select")),
                 ElevatedButton(onPressed: () async {
-                  int? score = data[index].score;
-                  data[index].score = (score!+50);
+                  int? score = data[index].reps;
+                  data[index].reps = (score!+50);
                   Update_data();
                 }, child: Text("+50")),
                 ElevatedButton(onPressed: () async {
-                  int? score = data[index].score;
-                  data[index].score = (score!-50);
-                  print(data[index].score);
-                  if((data[index].score!) < 0){
-                    data[index].score = 0;
+                  int? score = data[index].reps;
+                  data[index].reps = (score!-50);
+                  print(data[index].reps);
+                  if((data[index].reps!) < 0){
+                    data[index].reps = 0;
                   }
-                  print(data[index].score);
+                  print(data[index].reps);
                   Update_data();
                 }, child: Text("-50")),
               ],
@@ -307,8 +325,14 @@ class _leaderboardControlState extends State<leaderboard_control> {
 Future<bool> Update_data() async{
   DatabaseReference ref = FirebaseDatabase.instance.ref("leaderboard");
   bool success= false;
-  var json = jsonEncode(data.map((e) => e.toJson()).toList());
-  await ref.child("$EventKey").child("score_board").set(json).then((_) {
+
+  Map<String,dynamic> maptest = HashMap();
+
+  for(board_obj obj_ in data){
+    maptest[obj_.id.toString()] = obj_.toJson();
+  }
+
+  await ref.child("$EventKey").child("score_board").set(maptest).then((_) {
      success = true;
   }).catchError((error) {
      success = false;
@@ -323,11 +347,11 @@ Future<bool> Update_data() async{
 void SET_DATA () async{
   FirebaseDatabase database = FirebaseDatabase.instance;
   DatabaseReference ref = FirebaseDatabase.instance.ref("leaderboard");
-  board_obj obj = board_obj("Sharp", "USA", 0, false,false, "flag_usa");
-  board_obj obj1 = board_obj("McKeegan", "Ireland", 0, false,false, "flag_ireland");
-  board_obj obj2 = board_obj("Miroshnik", "Russia", 0, false,false, "flag_russia");
-  board_obj obj3 = board_obj("Hughes", "USA", 0, false,false, "flag_usa");
-  board_obj obj4 = board_obj("Maze", "Canada", 0, false,false, "flag_canada");
+  board_obj obj = board_obj(0,"Sharp", "USA", 0, 0,0,0,0,0,false,false, "flag_usa");
+  board_obj obj1 = board_obj(1,"McKeegan", "Ireland", 0, 0,0,0,0,0,false,false, "flag_ireland");
+  board_obj obj2 = board_obj(2,"Miroshnik", "Russia", 0, 0,0,0,0,0,false,false, "flag_russia");
+  board_obj obj3 = board_obj(3,"Hughes", "USA", 0, 0,0,0,0,0,false,false, "flag_usa");
+  board_obj obj4 = board_obj(4,"Maze", "Canada", 0, 0,0,0,0,0,false,false, "flag_canada");
   List <board_obj> boardObjects = [];
   boardObjects.add(obj);
   boardObjects.add(obj1);
@@ -428,4 +452,5 @@ Widget ScoreData(D_Width, Score, data, active) {
       )
     ],
   );
+
 }

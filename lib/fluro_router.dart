@@ -2,6 +2,8 @@ import 'dart:collection';
 
 import 'package:fluro/fluro.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:leaderboard/Grid_Control.dart';
+import 'package:leaderboard/Grid_Control_Scores.dart';
 import 'package:leaderboard/leaderboard.dart';
 import 'package:leaderboard/leaderboard_All_List.dart';
 import 'package:leaderboard/leaderboard_control.dart';
@@ -10,6 +12,17 @@ import 'package:leaderboard/leaderboard_creator.dart';
 class FluroRouterR {
   FluroRouterR({Key? key});
   static final router = FluroRouter();
+
+  static var gridControl = Handler(handlerFunc: (BuildContext? context, Map<String, dynamic> params) {
+    String myurl = Uri.base.toString(); //get complete url
+    Map<String,dynamic> params =  GetMapParams(myurl);
+    if(params.containsKey("event_key")){
+      String event_key = params["event_key"];
+      return GridControlScores(Event_Key: event_key,);
+    }else{
+      return GridControlScores(Event_Key: "1678891316047",);
+    }
+  });
 
   static var allEvents = Handler(handlerFunc: (BuildContext? context, Map<String, dynamic> params) {
     return leaderboard_all_list();
@@ -63,6 +76,7 @@ class FluroRouterR {
     router.define("editor", handler: editor);
     router.define("control", handler: control);
     router.define("scores", handler: scores);
+    router.define("gridControl", handler: gridControl);
   }
 
   static GetMapParams(String myurl){
