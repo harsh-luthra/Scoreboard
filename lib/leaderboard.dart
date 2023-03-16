@@ -8,11 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:implicitly_animated_list/implicitly_animated_list.dart';
 
-import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_core/firebase_core.dart' as fb;
 import 'package:leaderboard/board_obj.dart';
-
-import 'leaderboard_control.dart';
 
 String SampleTest = "None";
 bool full = true;
@@ -27,6 +23,8 @@ final List<String> event_data_types = [
 ];
 
 String selectedEventDatatype = "Reps";
+
+int data_type = 0;
 
 class leaderboard extends StatefulWidget {
   static const String route = '/scores';
@@ -84,6 +82,7 @@ class _leaderboardState extends State<leaderboard> {
             Replace_data_to_New(BoardObjects);
             sort_active();
             data.sort((a, b) => b.reps.compareTo(a.reps));
+            sortByDataType();
             //data.sort((a, b) => a.name.toString().compareTo(b.name.toString()));
             //data = data.reversed.toList();
           }
@@ -173,11 +172,14 @@ class _leaderboardState extends State<leaderboard> {
     if(selectedEventDatatype == event_data_types[1]){ // REPS TIME
       data.sort((a, b) => b.reps.compareTo(a.reps));
       data.sort((a, b) => b.time.compareTo(a.time));
+      data_type = 1;
     }else if(selectedEventDatatype == event_data_types[2]){  // DISTANCE TIME
       data.sort((a, b) => b.distance.compareTo(a.distance));
       data.sort((a, b) => b.time.compareTo(a.time));
+      data_type = 2;
     }else{ // REPS
       data.sort((a, b) => b.reps.compareTo(a.reps));
+      data_type = 0;
     }
   }
 
@@ -194,10 +196,6 @@ class _leaderboardState extends State<leaderboard> {
         }
       });
     });
-  }
-
-  void sort_score(){
-
   }
 
   void sort_active(){
@@ -278,6 +276,7 @@ class _leaderboardState extends State<leaderboard> {
 
 Widget ScoreData_anim(D_Width, board_obj data_obj) {
   int index = data.indexOf(data_obj);
+
   double? item_width = D_Width;
   Color? Selected_Color = Colors.grey;
   Color? Active_Color = Color.fromARGB(0, 255, 255, 255);
@@ -300,22 +299,24 @@ Widget ScoreData_anim(D_Width, board_obj data_obj) {
   //item_width = full ? D_Width * 0.8 : D_Width;
   return Column(
     children: [
-      data_obj.reps == 0 ? AnimatedContainer(
+      //data_obj.reps == 0 ?
+      AnimatedContainer(
         duration: Duration(seconds: data_obj.active == true ? 1 : 0 ),
         decoration: BoxDecoration(color: Selected_Color),
         margin: EdgeInsets.only(left: 10, right: 10),
         width: item_width,
         height: 50,
         child: Stacked_Score_Data(index,data_obj,Active_Color),
-      ) : Container(
-        decoration: BoxDecoration(color: Selected_Color),
-        margin: EdgeInsets.only(left: 10, right: 10),
-        width: item_width,
-        height: 50,
-        child: Stacked_Score_Data(index,data_obj,Active_Color),
       )
+      //     : Container(
+      //   decoration: BoxDecoration(color: Selected_Color),
+      //   margin: EdgeInsets.only(left: 10, right: 10),
+      //   width: item_width,
+      //   height: 50,
+      //   child: Stacked_Score_Data(index,data_obj,Active_Color),
+      // )
       ,
-      SizedBox(
+      const SizedBox(
         height: 10,
       )
     ],
@@ -323,6 +324,24 @@ Widget ScoreData_anim(D_Width, board_obj data_obj) {
 }
 
 Widget Stacked_Score_Data(index,board_obj data_obj, Color Active_Color){
+  String to_show = "";
+  print("DATA TYPE: $data_type");
+  if(data_obj.active == true){
+    if(data_type == 0){
+      to_show = "${data_obj.reps}";
+    }else if(data_type == 1){
+      to_show = "${data_obj.reps} - ${data_obj.time}Sec";
+    }else if(data_type == 2){
+      if(data_obj.time > 0){
+        to_show = "${data_obj.time}Sec";
+      }else{
+        to_show = "${data_obj.distance}Ft";
+      }
+    }
+  }else{
+    to_show = "";
+  }
+
   return Stack(
     alignment: Alignment.center,
     children: [
@@ -358,7 +377,7 @@ Widget Stacked_Score_Data(index,board_obj data_obj, Color Active_Color){
           ),
           Row(
             children: [
-              Text(data_obj.active == true ? " ${data_obj.reps}" : "",textAlign: TextAlign.start),
+              Text(to_show,textAlign: TextAlign.start),
               const SizedBox(width: 25,),
             ],
           ),
