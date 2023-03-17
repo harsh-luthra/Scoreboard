@@ -170,20 +170,79 @@ class _leaderboardState extends State<leaderboard> {
   void sortByDataType(){
     // Need to Fix Sort By with Time Logic
     if(selectedEventDatatype == event_data_types[1]){ // REPS TIME
-      data.sort((a, b) => b.reps.compareTo(a.reps));
-      data.sort((a, b) => b.time.compareTo(a.time));
       data_type = 1;
+
+      data.sort((a, b) {
+        if(a.time == 0 || b.time == 0){
+          return 1;
+        }
+        if(a.reps > b.reps){
+          return -1;
+        }else if(a.reps < b.reps){
+          return 1;
+        }else{
+          if(a.time < b.time){
+            return -1;
+          }else if(a.time > b.time){
+            return 1;
+          }else{
+            return 0;
+          }
+        }
+      });
+
     }else if(selectedEventDatatype == event_data_types[2]){  // DISTANCE TIME
-      data.sort((a, b) => b.distance.compareTo(a.distance));
-      data.sort((a, b) => b.time.compareTo(a.time));
       data_type = 2;
+
+      data.sort((a, b) {
+        if( (a.distance == 0 && a.time == 0) && (b.distance == 0 && b.time == 0)){ // IF ALL 0 MOVE TO LAST OR DO NOTHING
+          return 0;
+        }
+
+        else if( (b.distance == 0 && b.time == 0) ){ // IF B HAS NO DATA move A UP
+          return -1;
+        }else if( (a.distance == 0 && a.time == 0) ){ // IF A HAS NO DATA move B UP
+          return 1;
+        }
+
+        else if( (a.time > b.time) && (a.distance == 0 && b.distance == 0)){ // IF A time is big then B move B UP
+          return 1;
+        }else if( (a.time < b.time) && (a.distance == 0 && b.distance == 0)){ // IF A time is small then A move A UP
+          return -1;
+        }
+
+        else if( (a.distance > b.distance) && (a.time == 0 && b.time == 0)){ // IF A dis is big then B move A UP
+          return -1;
+        }else if( (a.distance < b.distance) && (a.time == 0 && b.time == 0)){ // IF A dis is small then B move B UP
+          return 1;
+        }
+
+        else if( (a.distance == 0 && a.time != 0) && (b.distance == 0 && b.time == 0) ){ // IF A got TIME and B has no data Move A UP
+          return 1;
+        }else if( (b.distance == 0 && b.time != 0) && (a.distance == 0 && a.time == 0) ){ // IF B got TIME and A has no data Move B UP
+          return -1;
+        }
+
+        else if( (a.time == 0 && a.distance != 0) && (b.distance == 0 && b.time != 0) ){ // IF A got DIS and B GOT TIME Move B UP
+          return 1;
+        }
+
+        else if( (b.time == 0 && b.distance != 0) && (a.distance == 0 && a.time == 0) ){ // IF B got DIS and A GOT no data
+          return -1;
+        }
+
+        else{
+          return 0;
+        }
+      });
+
     }else{ // REPS
       data.sort((a, b) => b.reps.compareTo(a.reps));
       data_type = 0;
     }
   }
 
-  void Replace_data_to_New(List<board_obj>  BoardObjects){
+  void Replace_data_to_New(List<board_obj> BoardObjects){
     setState(() {
       data = BoardObjects;
       data.sort((a, b) {

@@ -52,7 +52,7 @@ class FluroRouterR {
           String event_key = params["event_key"];
           return leaderboard_control(Event_Key: event_key,);
         }else{
-          return leaderboard_all_list();
+          //return leaderboard_all_list();
         }
   });
 
@@ -63,7 +63,8 @@ class FluroRouterR {
       String event_key = params["event_key"];
       return leaderboard(Event_Key: event_key,);
     }else{
-      return leaderboard_all_list();
+      return leaderboard(Event_Key: "1678891316047",);
+      //return leaderboard_all_list();
     }
   });
 
