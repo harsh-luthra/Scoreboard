@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:leaderboard/leaderboard.dart';
 import 'package:leaderboard/leaderboard_control.dart';
 import 'package:leaderboard/leaderboard_creator.dart';
@@ -71,8 +72,9 @@ class MyApp_1 extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
         // home: leaderboard_all_list(),
-        //initialRoute: 'allevents',
-        initialRoute: 'scores',
+        //initialRoute: 'allevents',.
+        // initialRoute: 'gridControl',
+        initialRoute: 'allevents',
         onGenerateRoute: FluroRouterR.router.generator);
   }
 }

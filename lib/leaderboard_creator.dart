@@ -69,32 +69,8 @@ class _leaderboard_creatorState extends State<leaderboard_creator> {
   void initState() {
     super.initState();
 
-    // String myurl = Uri.base.toString(); //get complete url
-    // String? event_key = Uri.base.queryParameters["event_key"]; //get parameter with attribute "para1"
-    // String? route = Uri.base.queryParameters["route"]; //get parameter with attribute "para2"
-    //
-    // Map<String,dynamic> params = HashMap();
-    //
-    // if(myurl.contains("?")){
-    //   var split = myurl.split("?");
-    //   if(split[1].contains("&")){
-    //     var split_vars = split[1].split("&");
-    //     print(split_vars);
-    //     for(String q_parman in split_vars){
-    //       if(q_parman.contains("=")){
-    //         var split_vars = q_parman.split("=");
-    //         params[split_vars[0]] = split_vars[1];
-    //       }
-    //     }
-    //   }
-    // }
-    //
-    // params.forEach((k,v){
-    //   print("$k=$v");
-    // });
-
     data = [];
-
+    teamNameController.text = "Name";
     isEditing = got_is_Editing;
     print(got_MainKey);
     if (!isEditing) {
@@ -103,16 +79,16 @@ class _leaderboard_creatorState extends State<leaderboard_creator> {
       mainDataKeyDB = got_MainKey;
     }
 
-    AddAllFalgsData();
+    addAllFlagsData();
     print(mainDataKeyDB);
     if (isEditing) {
       DatabaseReference starCountRef =
           FirebaseDatabase.instance.ref("leaderboard/$mainDataKeyDB");
       //DatabaseReference starCountRef = FirebaseDatabase.instance.ref("leaderboard_test/test");
-
       starCountRef.onValue.listen((DatabaseEvent event) {
         final data_snap = event.snapshot.child("score_board").value;
         Event_Title = event.snapshot.child("title").value.toString();
+        selectedEventDatatype = event.snapshot.child("type").value.toString();
 
         Iterable childs = event.snapshot.child("score_board").children;
 
@@ -135,14 +111,16 @@ class _leaderboard_creatorState extends State<leaderboard_creator> {
         // List<board_obj> BoardObjects = List<board_obj>.from(l.map((model)=> board_obj.fromJson(model)));
         if (mounted) {
           setState(() {
-            if (data.isEmpty) {
-              data = BoardObjects;
-              data.sort((a, b) => a.id.compareTo(b.id));
-            }
+            Event_Title = event.snapshot.child("title").value.toString();
+            selectedEventDatatype =
+                event.snapshot.child("type").value.toString();
+            data = BoardObjects;
+            data.sort((a, b) => a.id.compareTo(b.id));
           });
         }
       });
     } else {
+      selectedEventDatatype = "Reps";
       board_obj obj = board_obj(
           0, "Name", "USA", 0, 0, 0, 0, 0, 0, false, false, "flag_usa");
       // board_obj obj1 = board_obj(1,"McKeegan", "Ireland", 0, false,false, "flag_ireland");
@@ -158,13 +136,16 @@ class _leaderboard_creatorState extends State<leaderboard_creator> {
     }
   }
 
-  void AddAllFalgsData() {
+  void addAllFlagsData() {
     countryFlagMap['USA'] = "flag_usa";
     countryFlagMap['Canada'] = "flag_canada";
     countryFlagMap['Russia'] = "flag_russia";
     countryFlagMap['Ireland'] = "flag_ireland";
-    countryFlagMap['United Kingdom'] = "flag_uk";
+    countryFlagMap['UK'] = "flag_uk";
     countryFlagMap['Czech Republic'] = "flag_czech_republic";
+    countryFlagMap['Norway'] = "flag_norway";
+    countryFlagMap['Finland'] = "flag_finland";
+    countryFlagMap['Wales'] = "flag_wales";
 
     countryFlagMap.forEach((k, v) {
       countryNameList.add(k);
@@ -211,26 +192,27 @@ class _leaderboard_creatorState extends State<leaderboard_creator> {
                       ),
                     )),
                 Container(
-                    margin: const EdgeInsets.all(25),
-                    alignment: Alignment.center,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        board_obj obj4 = board_obj(data.length, "", "Canada", 0,
-                            0, 0, 0, 0, 0, false, false, "flag_canada");
-                        data.add(obj4);
-                        Choose_Flag(data.indexOf(obj4), true);
-                      },
-                      child: const Icon(
-                        Icons.add,
-                        size: 40,
-                      ),
-                    )),
+                  margin: const EdgeInsets.all(25),
+                  alignment: Alignment.center,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      board_obj obj4 = board_obj(data.length, "", "Canada", 0,
+                          0, 0, 0, 0, 0, false, false, "flag_canada");
+                      data.add(obj4);
+                      chooseFlag(data.indexOf(obj4), true);
+                    },
+                    child: const Icon(
+                      Icons.add,
+                      size: 40,
+                    ),
+                  ),
+                ),
                 Container(
                     margin: const EdgeInsets.all(25),
                     alignment: Alignment.center,
                     child: ElevatedButton(
                       onPressed: () {
-                        Save_to_DB();
+                        saveToDB();
                       },
                       child: const Icon(
                         Icons.save,
@@ -239,7 +221,6 @@ class _leaderboard_creatorState extends State<leaderboard_creator> {
                     )),
               ],
             ),
-
             DropdownButton(
               value: selectedEventDatatype,
               items: event_data_types.map((String items) {
@@ -287,12 +268,151 @@ class _leaderboard_creatorState extends State<leaderboard_creator> {
               child: ImplicitlyAnimatedList<board_obj>(
                   itemData: data,
                   itemBuilder: (context, dataU) {
-                    return List_Of_Data(deviceWidth, dataU);
+                    return listOfData(deviceWidth, dataU);
                   }),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget listOfData(dWidth, board_obj dataObj) {
+    double iconSize = 25;
+    int index = data.indexOf(dataObj);
+    String flagFileName = 'assets/images/${dataObj.flagImgName}.png';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        Container(
+          color: Colors.grey,
+          padding: const EdgeInsets.all(10),
+          width: deviceWidth,
+          height: 125,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              SizedBox(
+                width: 25,
+                child: Text(" ${dataObj.id + 1}", style: TextStyle(fontSize: 17,fontWeight: FontWeight.w600)),
+              ),
+              const SizedBox(
+                width: 0,
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Container(
+                    width: 100,
+                    height: 65,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                          image: AssetImage(flagFileName), fit: BoxFit.fill),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Text("${dataObj.country}", style: TextStyle(fontSize: 15,fontWeight: FontWeight.w500)),
+                ],
+              ),
+              //const SizedBox(width: 5,),
+              SizedBox(
+                width: iconSize,
+                child: InkWell(
+                    splashColor: Colors.red,
+                    child: Icon(
+                      Icons.edit_square,
+                      size: iconSize,
+                    ),
+                    onTap: () {
+                      setState(() {
+                        chooseFlag(index, false);
+                      });
+                    }),
+              ),
+              const SizedBox(
+                width: 20,
+              ),
+              SizedBox(
+                  width: 125,
+                  child: Text(
+                    " ${dataObj.name}",
+                      style: TextStyle(fontSize: 18,fontWeight: FontWeight.w500),
+                  )),
+              InkWell(
+                  splashColor: Colors.red,
+                  child: Icon(
+                    Icons.edit,
+                    size: iconSize,
+                  ),
+                  onTap: () {
+                    setState(() {
+                      editName(index, false);
+                      teamNameController.text = dataObj.name!;
+                    });
+                  }),
+              InkWell(
+                  splashColor: Colors.red,
+                  child: Icon(
+                    Icons.delete_sharp,
+                    size: iconSize,
+                  ),
+                  onTap: () {
+                    deleteConfirmation(index);
+                    // setState(() {
+                    //   data.removeAt(index);
+                    // });
+                  }),
+              data.length == index + 1
+                  ? const SizedBox(
+                width: 25,
+              )
+                  : InkWell(
+                  splashColor: Colors.red,
+                  child: Icon(
+                    Icons.arrow_circle_down,
+                    size: iconSize,
+                  ),
+                  onTap: () {
+                    setState(() {
+                      var tmp1 = data[index]; // 0
+                      data[index] = data[index + 1];
+                      data[index + 1] = tmp1;
+                      reAssignId();
+                    });
+                  }),
+              index == 0
+                  ? const SizedBox(
+                width: 20,
+              )
+                  : InkWell(
+                  splashColor: Colors.red,
+                  child: Icon(
+                    Icons.arrow_circle_up,
+                    size: iconSize,
+                  ),
+                  onTap: () {
+                    setState(() {
+                      var tmp1 = data[index]; // 0
+                      data[index] = data[index - 1];
+                      data[index - 1] = tmp1;
+                      reAssignId();
+                    });
+                  }),
+              const SizedBox(
+                width: 5,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -352,31 +472,52 @@ class _leaderboard_creatorState extends State<leaderboard_creator> {
         });
   }
 
-  void Save_to_DB() {
+  void saveToDB() {
     DatabaseReference ref =
         FirebaseDatabase.instance.ref("leaderboard/$mainDataKeyDB");
+    Map<String, dynamic> maptest = HashMap();
 
-      ref.child("title").set(Event_Title).then((value) {
-      Map<String, dynamic> maptest = HashMap();
+    for (board_obj obj_ in data) {
+      maptest[obj_.id.toString()] = obj_.toJson();
+    }
 
-      ref.child("type").set(selectedEventDatatype);
+    Map<dynamic, dynamic> map_to_save = HashMap();
 
-      for (board_obj obj_ in data) {
-        maptest[obj_.id.toString()] = obj_.toJson();
-      }
+    map_to_save["title"] = Event_Title;
+    map_to_save["type"] = selectedEventDatatype;
+    map_to_save["score_board"] = maptest;
 
-      //var json = jsonEncode(data.map((e) => e.toJson()).toList());
-      ref.child("score_board").set(maptest).then((value) {
-        ShowSnackBar("Data Saved");
-        showAlertDialog(context, 'Data Saved');
-      }).onError((error, stackTrace) {
-        ShowSnackBar("Error Data not Saved");
-        showAlertDialog(context, 'Error Data not Saved');
-      });
+    ref.set(map_to_save).then((value) {
+      setState(() {});
     }).onError((error, stackTrace) {
       ShowSnackBar("Error Data not Saved");
       showAlertDialog(context, 'Error Data not Saved');
+    }).whenComplete(() {
+      ShowSnackBar("Data Saved");
+      showAlertDialog(context, 'Data Saved');
     });
+
+    // ref.child("title").set(Event_Title).then((value) {
+    //   Map<String, dynamic> maptest = HashMap();
+    //
+    //   ref.child("type").set(selectedEventDatatype);
+    //
+    //   for (board_obj obj_ in data) {
+    //     maptest[obj_.id.toString()] = obj_.toJson();
+    //   }
+    //
+    //   //var json = jsonEncode(data.map((e) => e.toJson()).toList());
+    //   ref.child("score_board").set(maptest).then((value) {
+    //     ShowSnackBar("Data Saved");
+    //     showAlertDialog(context, 'Data Saved');
+    //   }).onError((error, stackTrace) {
+    //     ShowSnackBar("Error Data not Saved");
+    //     showAlertDialog(context, 'Error Data not Saved');
+    //   });
+    // }).onError((error, stackTrace) {
+    //   ShowSnackBar("Error Data not Saved");
+    //   showAlertDialog(context, 'Error Data not Saved');
+    // });
 
     // var json = jsonEncode(data.map((e) => e.toJson()).toList());
     // ref.set(json).then((value) {
@@ -413,7 +554,7 @@ class _leaderboard_creatorState extends State<leaderboard_creator> {
     );
   }
 
-  void Choose_Flag(int indexS, bool addingNew) {
+  void chooseFlag(int indexS, bool addingNew) {
     showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -422,7 +563,7 @@ class _leaderboard_creatorState extends State<leaderboard_creator> {
               'Country List',
               textAlign: TextAlign.center,
             ),
-            content: setupAlertDialoagContainer(indexS, addingNew),
+            content: setupAlertDialogContainer(indexS, addingNew),
             actions: [
               TextButton(
                   onPressed: () {
@@ -439,7 +580,7 @@ class _leaderboard_creatorState extends State<leaderboard_creator> {
         });
   }
 
-  void Edit_Name(int indexIn, bool addingNew) {
+  void editName(int indexIn, bool addingNew) {
     showDialog(
         context: context,
         builder: (context) {
@@ -453,7 +594,7 @@ class _leaderboard_creatorState extends State<leaderboard_creator> {
             actions: [
               TextButton(
                   onPressed: () {
-                    if (is_name_unique(teamNameController.text, indexIn)) {
+                    if (isNameUnique(teamNameController.text, indexIn)) {
                       setState(() {
                         data[indexIn].name = teamNameController.text;
                       });
@@ -478,7 +619,7 @@ class _leaderboard_creatorState extends State<leaderboard_creator> {
         });
   }
 
-  Widget setupAlertDialoagContainer(int indexToChange, bool addingNew) {
+  Widget setupAlertDialogContainer(int indexToChange, bool addingNew) {
     return SizedBox(
       width: double.maxFinite,
       height: double.maxFinite,
@@ -517,7 +658,7 @@ class _leaderboard_creatorState extends State<leaderboard_creator> {
                       });
                       Navigator.pop(context);
                       if (addingNew) {
-                        Edit_Name(indexToChange, addingNew);
+                        editName(indexToChange, addingNew);
                       }
                     }),
                 const SizedBox(
@@ -531,152 +672,13 @@ class _leaderboard_creatorState extends State<leaderboard_creator> {
     );
   }
 
-  Widget List_Of_Data(dWidth, board_obj dataObj) {
-    double iconSize = 25;
-    int index = data.indexOf(dataObj);
-    String flagFileName = 'assets/images/${dataObj.flagImgName}.png';
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.max,
-      children: [
-        Container(
-          color: Colors.grey,
-          padding: const EdgeInsets.all(10),
-          width: deviceWidth,
-          height: 125,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              SizedBox(
-                width: 25,
-                child: Text(" ${dataObj.id + 1}"),
-              ),
-              const SizedBox(
-                width: 0,
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Container(
-                    width: 100,
-                    height: 75,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                          image: AssetImage(flagFileName), fit: BoxFit.fill),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  Text("${dataObj.country}", style: TextStyle(fontSize: 15)),
-                ],
-              ),
-              //const SizedBox(width: 5,),
-              SizedBox(
-                width: iconSize,
-                child: InkWell(
-                    splashColor: Colors.red,
-                    child: Icon(
-                      Icons.edit_square,
-                      size: iconSize,
-                    ),
-                    onTap: () {
-                      setState(() {
-                        Choose_Flag(index, false);
-                      });
-                    }),
-              ),
-              const SizedBox(
-                width: 20,
-              ),
-              SizedBox(
-                  width: 125,
-                  child: Text(
-                    " ${dataObj.name}",
-                    style: TextStyle(fontSize: 20),
-                  )),
-              InkWell(
-                  splashColor: Colors.red,
-                  child: Icon(
-                    Icons.edit,
-                    size: iconSize,
-                  ),
-                  onTap: () {
-                    setState(() {
-                      Edit_Name(index, false);
-                      teamNameController.text = dataObj.name!;
-                    });
-                  }),
-              InkWell(
-                  splashColor: Colors.red,
-                  child: Icon(
-                    Icons.delete_sharp,
-                    size: iconSize,
-                  ),
-                  onTap: () {
-                    deleteConfirmation(index);
-                    // setState(() {
-                    //   data.removeAt(index);
-                    // });
-                  }),
-              data.length == index + 1
-                  ? const SizedBox(
-                      width: 25,
-                    )
-                  : InkWell(
-                      splashColor: Colors.red,
-                      child: Icon(
-                        Icons.arrow_circle_down,
-                        size: iconSize,
-                      ),
-                      onTap: () {
-                        setState(() {
-                          var tmp1 = data[index]; // 0
-                          data[index] = data[index + 1];
-                          data[index + 1] = tmp1;
-                          reAssignId();
-                        });
-                      }),
-              index == 0
-                  ? const SizedBox(
-                      width: 20,
-                    )
-                  : InkWell(
-                      splashColor: Colors.red,
-                      child: Icon(
-                        Icons.arrow_circle_up,
-                        size: iconSize,
-                      ),
-                      onTap: () {
-                        setState(() {
-                          var tmp1 = data[index]; // 0
-                          data[index] = data[index - 1];
-                          data[index - 1] = tmp1;
-                          reAssignId();
-                        });
-                      }),
-              const SizedBox(
-                width: 5,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   void reAssignId() {
     for (board_obj obj in data) {
       obj.id = data.indexOf(obj);
     }
   }
 
-  bool is_name_unique(String nameCheck, int indexAt) {
+  bool isNameUnique(String nameCheck, int indexAt) {
     for (board_obj obj in data) {
       if (obj.name?.toLowerCase() == nameCheck.toLowerCase()) {
         if (indexAt == data.indexOf(obj)) {

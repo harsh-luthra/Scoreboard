@@ -22,6 +22,8 @@ final List<String> event_data_types = [
   "Distance,Time",
 ];
 
+int last_index = 0;
+
 String selectedEventDatatype = "Reps";
 
 int data_type = 0;
@@ -43,15 +45,6 @@ class _leaderboardState extends State<leaderboard> {
   @override
   void initState() {
     super.initState();
-    // /?event_key=1678711717666&route=scores
-    // String myurl = Uri.base.toString(); //get complete url
-    // String? event_key = Uri.base.queryParameters["event_key"]; //get parameter with attribute "para1"
-    // String? route = Uri.base.queryParameters["route"]; //get parameter with attribute "para2"
-    // print(myurl);
-    // print(event_key);
-    // print(route);
-    //html.window.location.href = "/?event_key=$EventKey&route=scores";
-    // test_get();
 
     data = [];
 
@@ -59,7 +52,6 @@ class _leaderboardState extends State<leaderboard> {
     //FirebaseDatabase.instance.ref("leaderboard/003");
     FirebaseDatabase.instance.ref("leaderboard/$EventKey");
     starCountRef.onValue.listen((DatabaseEvent event) {
-
       Iterable childs = event.snapshot.child("score_board").children;
 
       List<board_obj> BoardObjects = [];
@@ -81,11 +73,13 @@ class _leaderboardState extends State<leaderboard> {
             selectedEventDatatype = event.snapshot.child("type").value.toString();
             Replace_data_to_New(BoardObjects);
             sort_active();
-            data.sort((a, b) => b.reps.compareTo(a.reps));
+            //data.sort((a, b) => b.reps.compareTo(a.reps));
             sortByDataType();
             //data.sort((a, b) => a.name.toString().compareTo(b.name.toString()));
             //data = data.reversed.toList();
           }
+          last_index = 0;
+          sort_active();
           test_single_value(BoardObjects);
         });
       }
@@ -173,8 +167,8 @@ class _leaderboardState extends State<leaderboard> {
       data_type = 1;
 
       data.sort((a, b) {
-        if(a.time == 0 || b.time == 0){
-          return 1;
+        if(a.time == 0 && b.time == 0){
+          return 0;
         }
         if(a.reps > b.reps){
           return -1;
@@ -205,9 +199,9 @@ class _leaderboardState extends State<leaderboard> {
           return 1;
         }
 
-        else if( (a.time > b.time) && (a.distance == 0 && b.distance == 0)){ // IF A time is big then B move B UP
+        else if( (a.time > b.time) && (a.distance == 0 && b.distance == 0) ){ // IF A time is big then B move B UP
           return 1;
-        }else if( (a.time < b.time) && (a.distance == 0 && b.distance == 0)){ // IF A time is small then A move A UP
+        }else if( (a.time < b.time) && (a.distance == 0 && b.distance == 0) ){ // IF A time is small then A move A UP
           return -1;
         }
 
@@ -288,13 +282,14 @@ class _leaderboardState extends State<leaderboard> {
     double? device_width = MediaQuery.of(context).size.width;
     double? device_height = MediaQuery.of(context).size.height;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: AnimatedContainer(
           duration: Duration(seconds: 1),
           width: !compact_mode ? device_width*0.8 : device_width *0.6,
           child: Column(
             children: [
-              SizedBox(height: 50,),
+              SizedBox(height: 5,),
               ElevatedButton(
                   onPressed: () {
                     //SET_DATA();
@@ -318,8 +313,11 @@ class _leaderboardState extends State<leaderboard> {
               //       });
               //     },
               //     child: Text("GET DATA")),
+              SizedBox(height: 50,),
               Expanded(
                 child: ImplicitlyAnimatedList<board_obj>(
+                  insertDuration: Duration(seconds: 1),
+                  deleteDuration: Duration(seconds: 1),
                     itemData: data,
                     itemBuilder: (context, dataU) {
                       return ScoreData_anim(device_width, dataU);
@@ -345,7 +343,7 @@ Widget ScoreData_anim(D_Width, board_obj data_obj) {
     Active_Color = Color.fromARGB(0, 255, 255, 255);
 
     if (data_obj.selected == true) {
-      Selected_Color = Colors.lightBlue;
+      Selected_Color = Colors.red;
     } else {
       Selected_Color = Colors.grey;
     }
@@ -358,20 +356,20 @@ Widget ScoreData_anim(D_Width, board_obj data_obj) {
   //item_width = full ? D_Width * 0.8 : D_Width;
   return Column(
     children: [
-      //data_obj.reps == 0 ?
+      //data_obj.reps != 0 ?
       AnimatedContainer(
         duration: Duration(seconds: data_obj.active == true ? 1 : 0 ),
         decoration: BoxDecoration(color: Selected_Color),
         margin: EdgeInsets.only(left: 10, right: 10),
         width: item_width,
-        height: 50,
+        height: 100,
         child: Stacked_Score_Data(index,data_obj,Active_Color),
       )
       //     : Container(
       //   decoration: BoxDecoration(color: Selected_Color),
       //   margin: EdgeInsets.only(left: 10, right: 10),
       //   width: item_width,
-      //   height: 50,
+      //   height: 100,
       //   child: Stacked_Score_Data(index,data_obj,Active_Color),
       // )
       ,
@@ -383,6 +381,15 @@ Widget ScoreData_anim(D_Width, board_obj data_obj) {
 }
 
 Widget Stacked_Score_Data(index,board_obj data_obj, Color Active_Color){
+  String index_to_show = "";
+
+  if(data_obj.active == true){
+    last_index = index+1;
+    index_to_show = "$last_index";
+  }else{
+    index_to_show = "${last_index + 1}";
+  }
+
   String to_show = "";
   print("DATA TYPE: $data_type");
   if(data_obj.active == true){
@@ -391,10 +398,10 @@ Widget Stacked_Score_Data(index,board_obj data_obj, Color Active_Color){
     }else if(data_type == 1){
       to_show = "${data_obj.reps} - ${data_obj.time}Sec";
     }else if(data_type == 2){
-      if(data_obj.time > 0){
-        to_show = "${data_obj.time}Sec";
-      }else{
+      if(data_obj.distance > 0 && data_obj.time == 0){
         to_show = "${data_obj.distance}Ft";
+      }else{
+        to_show = "${data_obj.time}Sec";
       }
     }
   }else{
@@ -414,21 +421,21 @@ Widget Stacked_Score_Data(index,board_obj data_obj, Color Active_Color){
             mainAxisAlignment: MainAxisAlignment.start,
             mainAxisSize: MainAxisSize.max,
             children: [
-              Text(" ${index + 1}"),
+              Text(" ${index_to_show}",style: TextStyle(fontSize: 25,fontWeight: FontWeight.w600)),
               const SizedBox(
-                width: 10,
+                width: 20,
               ),
               Container(
-                  width: 30,
-                  height: 40,
+                  width: 100,
+                  height: 65,
                   decoration: BoxDecoration(
                     image:
-                    DecorationImage(image: AssetImage('assets/images/${data_obj.flagImgName}.png'), fit: BoxFit.scaleDown),
+                    DecorationImage(image: AssetImage('assets/images/${data_obj.flagImgName}.png'), fit: BoxFit.fill),
                   )),
               const SizedBox(
                 width: 10,
               ),
-              Text(compact_mode != true ? " ${data_obj.name}" : " ${data_obj.country}"),
+              Text(compact_mode != true ? " ${data_obj.name}".toUpperCase() : " ${data_obj.country}".toUpperCase(),style: TextStyle(fontSize: 25,fontWeight: FontWeight.w600),),
               const SizedBox(
                 width: 10,
               ),
@@ -436,7 +443,7 @@ Widget Stacked_Score_Data(index,board_obj data_obj, Color Active_Color){
           ),
           Row(
             children: [
-              Text(to_show,textAlign: TextAlign.start),
+              Text(to_show,textAlign: TextAlign.start,style: TextStyle(fontSize: 25,fontWeight: FontWeight.w600)),
               const SizedBox(width: 25,),
             ],
           ),
@@ -444,7 +451,7 @@ Widget Stacked_Score_Data(index,board_obj data_obj, Color Active_Color){
       ),
       Container(
         // width: item_width,
-        height: 50,
+        height: 100,
         decoration: BoxDecoration(color: Active_Color),
       ),
     ],

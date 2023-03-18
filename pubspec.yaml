@@ -44,6 +44,7 @@ dependencies:
   pluto_grid_export: ^1.0.4
   file_saver: ^0.1.1
   intl: ^0.18.0
+  google_fonts: ^4.0.3
 
 dev_dependencies:
   flutter_test:
@@ -82,12 +83,10 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
+  fonts:
+     - family: Montserrat
+       fonts:
+         - asset: assets/fonts/Montserrat-SemiBold.ttf
   #   - family: Trajan Pro
   #     fonts:
   #       - asset: fonts/TrajanPro.ttf

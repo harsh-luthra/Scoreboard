@@ -18,7 +18,13 @@ final List<String> event_data_types = [
   "Distance,Time",
 ];
 
+List<String> selectActivePLayerList = ["0 - NONE",];
+
+String CurrenSelectedActivePlayer = "0 - NONE";
+
 String selectedEventDatatype = "Reps";
+
+bool autoUpdate = true;
 
 class GridControlScores extends StatefulWidget {
   final String Event_Key;
@@ -60,16 +66,12 @@ class _GridControlScoresState extends State<GridControlScores> {
     DatabaseReference starCountRef = FirebaseDatabase.instance.ref("leaderboard/$EventKey");
     await starCountRef.onValue.listen((DatabaseEvent event) {
       final dataSnap = event.snapshot.child("score_board").value;
-
       Iterable childs = event.snapshot.child("score_board").children;
-
       if(BoardObjects.isEmpty) {
         eventTitle = event.snapshot.child("title").value.toString();
         selectedEventDatatype = event.snapshot.child("type").value.toString();
-
         createColumnsFromData();
       }
-
       List<board_obj> tempBoardobjects = [];
       for(DataSnapshot snap in childs){
         print(snap.value.toString());
@@ -82,12 +84,12 @@ class _GridControlScoresState extends State<GridControlScores> {
         //   print("${snap_c.key.toString()} = ${snap_c.value.toString()}");
         // }
       }
-
       if(mounted){
         print("GRID ALL LOADED AGAINA");
         setState(() {
           if(BoardObjects.isEmpty) {
             BoardObjects = tempBoardobjects;
+            addDataToSelectCurrentPlayerList();
             print(BoardObjects);
             addColumnsDataFromList();
           }
@@ -119,6 +121,20 @@ class _GridControlScoresState extends State<GridControlScores> {
 
   bool IsBlackThemeMode = true;
 
+  Color? TextColorTheme = Colors.black;
+
+  void addDataToSelectCurrentPlayerList(){
+    selectActivePLayerList = ["0 - NONE"];
+    for(board_obj obj in BoardObjects){
+      String toAdd = "${BoardObjects.indexOf(obj) + 1} - ${obj.name}";
+      selectActivePLayerList.add(toAdd);
+      if(obj.selected == true && obj.active == true){
+        CurrenSelectedActivePlayer = toAdd;
+      }
+    }
+
+  }
+
   void createDummyScoreData() {
     board_obj obj = board_obj(0,"Harsh", "USA", 0, 0,0,0,0,0,false, false, "flag_usa");
     board_obj obj1 = board_obj(1,"McKeegan", "Ireland", 0, 0,0,0,0,0,false, false, "flag_ireland");
@@ -149,6 +165,15 @@ class _GridControlScoresState extends State<GridControlScores> {
         enableDropToResize: false,
         enableAutoEditing: true,
         enableEditingMode: true,
+        renderer: (rendererContext) {
+          return (Container(
+            color: IsBlackThemeMode == true ? Colors.black : Colors.white,
+            child: Text(rendererContext.stateManager.refRows[rendererContext.rowIdx].cells["id"]!.value.toString(),
+            style: TextStyle( color: (selectActivePLayerList.indexOf(CurrenSelectedActivePlayer)-1 == rendererContext.rowIdx
+            ) ? Colors.green : TextColorTheme
+            ,fontSize: 18),),
+          ));
+        }
       ),
       // PlutoColumn(
       //   title: 'Selected',
@@ -209,6 +234,15 @@ class _GridControlScoresState extends State<GridControlScores> {
         enableDropToResize: false,
         enableAutoEditing: true,
         enableEditingMode: true,
+          renderer: (rendererContext) {
+            return (Container(
+              color: IsBlackThemeMode == true ? Colors.black : Colors.white,
+              child: Text(rendererContext.stateManager.refRows[rendererContext.rowIdx].cells["country"]!.value.toString(),
+                style: TextStyle( color: (selectActivePLayerList.indexOf(CurrenSelectedActivePlayer)-1 == rendererContext.rowIdx
+                ) ? Colors.green : TextColorTheme
+                    ,fontSize: 16),),
+            ));
+          }
       ),
       PlutoColumn(
         title: 'Name',
@@ -222,52 +256,16 @@ class _GridControlScoresState extends State<GridControlScores> {
         enableDropToResize: false,
         enableAutoEditing: true,
         enableEditingMode: true,
+          renderer: (rendererContext) {
+            return (Container(
+              color: IsBlackThemeMode == true ? Colors.black : Colors.white,
+              child: Text(rendererContext.stateManager.refRows[rendererContext.rowIdx].cells["name"]!.value.toString(),
+                style: TextStyle( color: (selectActivePLayerList.indexOf(CurrenSelectedActivePlayer)-1 == rendererContext.rowIdx
+                ) ? Colors.green : TextColorTheme
+                    ,fontSize: 16),),
+            ));
+          }
       ),
-      // PlutoColumn(
-      //   title: 'Reps',
-      //   field: 'reps',
-      //   type: PlutoColumnType.number(),
-      //   enableColumnDrag: false,
-      //   enableRowDrag: false,
-      //   readOnly: false,
-      //   enableSorting: false,
-      //   enableContextMenu: false,
-      //   enableDropToResize: false,
-      //   enableAutoEditing: false,
-      //   enableEditingMode: true,
-      //   titleTextAlign: PlutoColumnTextAlign.center,
-      //   textAlign: PlutoColumnTextAlign.center,
-      // ),
-      // PlutoColumn(
-      //   title: 'Distance',
-      //   field: 'distance',
-      //   type: PlutoColumnType.number(),
-      //   enableColumnDrag: false,
-      //   enableRowDrag: false,
-      //   readOnly: false,
-      //   enableSorting: false,
-      //   enableContextMenu: false,
-      //   enableDropToResize: false,
-      //   enableAutoEditing: false,
-      //   enableEditingMode: true,
-      //   titleTextAlign: PlutoColumnTextAlign.center,
-      //   textAlign: PlutoColumnTextAlign.center,
-      // ),
-      // PlutoColumn(
-      //   title: 'Time',
-      //   field: 'time',
-      //   type: PlutoColumnType.number(),
-      //   enableColumnDrag: false,
-      //   enableRowDrag: false,
-      //   readOnly: false,
-      //   enableSorting: false,
-      //   enableContextMenu: false,
-      //   enableDropToResize: false,
-      //   enableAutoEditing: false,
-      //   enableEditingMode: true,
-      //   titleTextAlign: PlutoColumnTextAlign.center,
-      //   textAlign: PlutoColumnTextAlign.center,
-      // ),
       PlutoColumn(
         title: 'Score',
         field: 'score',
@@ -282,6 +280,15 @@ class _GridControlScoresState extends State<GridControlScores> {
         enableEditingMode: true,
         titleTextAlign: PlutoColumnTextAlign.center,
         textAlign: PlutoColumnTextAlign.center,
+          renderer: (rendererContext) {
+            return (Container(
+              color: IsBlackThemeMode == true ? Colors.black : Colors.white,
+              child: Text(rendererContext.stateManager.refRows[rendererContext.rowIdx].cells["score"]!.value.toString(),
+                style: TextStyle( color: (selectActivePLayerList.indexOf(CurrenSelectedActivePlayer)-1 == rendererContext.rowIdx
+                ) ? Colors.green : TextColorTheme
+                    ,fontSize: 16),textAlign: TextAlign.center,),
+            ));
+          }
       ),
       PlutoColumn(
         title: 'Total',
@@ -297,6 +304,18 @@ class _GridControlScoresState extends State<GridControlScores> {
         enableEditingMode: true,
         titleTextAlign: PlutoColumnTextAlign.center,
         textAlign: PlutoColumnTextAlign.center,
+          renderer: (rendererContext) {
+            return (Container(
+              color: IsBlackThemeMode == true ? Colors.black : Colors.white,
+              child: Text(
+                rendererContext.stateManager.refRows[rendererContext.rowIdx]
+                    .cells["total"]!.value.toString(),
+                style: TextStyle(color: (selectActivePLayerList.indexOf(
+                    CurrenSelectedActivePlayer) - 1 == rendererContext.rowIdx
+                ) ? Colors.green : TextColorTheme
+                    , fontSize: 16),textAlign: TextAlign.center,),
+            ));
+          }
       ),
       PlutoColumn(
         title: 'Place',
@@ -312,6 +331,15 @@ class _GridControlScoresState extends State<GridControlScores> {
         enableEditingMode: true,
         titleTextAlign: PlutoColumnTextAlign.center,
         textAlign: PlutoColumnTextAlign.center,
+          renderer: (rendererContext) {
+            return (Container(
+              color: IsBlackThemeMode == true ? Colors.black : Colors.white,
+              child: Text(rendererContext.stateManager.refRows[rendererContext.rowIdx].cells["place"]!.value.toString(),
+                style: TextStyle( color: (selectActivePLayerList.indexOf(CurrenSelectedActivePlayer)-1 == rendererContext.rowIdx
+                ) ? Colors.green : TextColorTheme
+                    ,fontSize: 16),textAlign: TextAlign.center,),
+            ));
+          }
       ),
 
     ];
@@ -330,6 +358,15 @@ class _GridControlScoresState extends State<GridControlScores> {
       enableEditingMode: true,
       titleTextAlign: PlutoColumnTextAlign.center,
       textAlign: PlutoColumnTextAlign.center,
+        renderer: (rendererContext) {
+          return (Container(
+            color: IsBlackThemeMode == true ? Colors.black : Colors.white,
+            child: Text(rendererContext.stateManager.refRows[rendererContext.rowIdx].cells["reps"]!.value.toString(),
+              style: TextStyle( color: (selectActivePLayerList.indexOf(CurrenSelectedActivePlayer)-1 == rendererContext.rowIdx
+              ) ? Colors.green : TextColorTheme
+                  ,fontSize: 16),textAlign: TextAlign.center,),
+          ));
+        }
     );
 
     PlutoColumn distance_col = PlutoColumn(
@@ -346,6 +383,15 @@ class _GridControlScoresState extends State<GridControlScores> {
         enableEditingMode: true,
         titleTextAlign: PlutoColumnTextAlign.center,
         textAlign: PlutoColumnTextAlign.center,
+        renderer: (rendererContext) {
+          return (Container(
+            color: IsBlackThemeMode == true ? Colors.black : Colors.white,
+            child: Text(rendererContext.stateManager.refRows[rendererContext.rowIdx].cells["distance"]!.value.toString(),
+              style: TextStyle( color: (selectActivePLayerList.indexOf(CurrenSelectedActivePlayer)-1 == rendererContext.rowIdx
+              ) ? Colors.green : TextColorTheme
+                  ,fontSize: 16),textAlign: TextAlign.center,),
+          ));
+        }
       );
 
     PlutoColumn time_col = PlutoColumn(
@@ -362,41 +408,29 @@ class _GridControlScoresState extends State<GridControlScores> {
       enableEditingMode: true,
       titleTextAlign: PlutoColumnTextAlign.center,
       textAlign: PlutoColumnTextAlign.center,
+        renderer: (rendererContext) {
+          return (Container(
+            color: IsBlackThemeMode == true ? Colors.black : Colors.white,
+            child: Text(rendererContext.stateManager.refRows[rendererContext.rowIdx].cells["time"]!.value.toString(),
+              style: TextStyle( color: (selectActivePLayerList.indexOf(CurrenSelectedActivePlayer)-1 == rendererContext.rowIdx
+              ) ? Colors.green : TextColorTheme
+                  ,fontSize: 16),textAlign: TextAlign.center,),
+          ));
+        }
     );
 
       if(selectedEventDatatype == event_data_types[1]){ // REPS TIME
         allColumns.insert(3, reps_col);
         allColumns.insert(4, time_col);
-        //print(selectedEventDatatype);
+        setState(() {
+          autoUpdate = false;
+        });
       }else if(selectedEventDatatype == event_data_types[2]){  // DISTANCE TIME
         allColumns.insert(3, distance_col);
         allColumns.insert(4, time_col);
-        //print(selectedEventDatatype);
       }else{ // REPS
         allColumns.insert(3, reps_col);
-        //print(selectedEventDatatype);
       }
-
-      //allColumns.a
-
-    // for (String string in columnsNames) {
-    //   PlutoColumn column = PlutoColumn(
-    //     title: string,
-    //     field: string,
-    //     type: PlutoColumnType.text(),
-    //     enableColumnDrag: false,
-    //     // Stop position changing
-    //     enableRowDrag: false,
-    //     // Not to drag rows
-    //     readOnly: true,
-    //     // Not to change anything
-    //     enableSorting: false,
-    //     enableContextMenu: false,
-    //     // Disable Menu from the side
-    //     enableDropToResize: false,
-    //   );
-    //   allColumns.add(column);
-    // }
   }
 
   void addColumnsDataFromList() {
@@ -425,7 +459,7 @@ class _GridControlScoresState extends State<GridControlScores> {
   Widget build(BuildContext context) {
     double? deviceWidth = MediaQuery.of(context).size.width;
     double? deviceHeight = MediaQuery.of(context).size.height;
-    Color? TextColorTheme = IsBlackThemeMode == true ? Colors.white : Colors.black;
+    TextColorTheme = (IsBlackThemeMode == true) ? Colors.white : Colors.black;
 
     if(BoardObjects.isEmpty){
       return Scaffold(
@@ -501,8 +535,64 @@ class _GridControlScoresState extends State<GridControlScores> {
                     Container(
                       color: IsBlackThemeMode == true ? Colors.black : Colors.white,
                       child: Checkbox(value: IsBlackThemeMode, onChanged: (b){
+                        //print("STR CurrenSelectedActivePlayer");
                         setState(() {
                           IsBlackThemeMode = b!;
+                          //TextColorTheme = IsBlackThemeMode == true ? Colors.white : Colors.black;
+                        });
+                      }),
+                    ),
+                    const SizedBox(
+                      width: 50,
+                    ),
+                    Column(
+                      children: [
+                        Text("Select Current Active Player", style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.green),),
+                        DropdownButton(
+                          value: CurrenSelectedActivePlayer,
+                          items: selectActivePLayerList.map((String items) {
+                            return DropdownMenuItem(
+                              value: items,
+                              child: Text(items, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              print(newValue);
+                              CurrenSelectedActivePlayer = newValue!;
+                              upDateCurrentActiveSelectedPlayer();
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      width: 50,
+                    ),
+                    Column(
+                      children: [
+                        Text("Toggle Auto Update Data", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.green),),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            UpdateDBData();
+                          },
+                          child: const Text(
+                            "UPDATE"
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    Container(
+                      color: autoUpdate == true ? Colors.black : Colors.white,
+                      child: Checkbox(value: autoUpdate, onChanged: (b){
+                        setState(() {
+                          autoUpdate = b!;
                           //TextColorTheme = IsBlackThemeMode == true ? Colors.white : Colors.black;
                         });
                       }),
@@ -529,8 +619,8 @@ class _GridControlScoresState extends State<GridControlScores> {
                       print("data loaded");
                     },
                     onChanged: (PlutoGridOnChangedEvent event) {
-                      print(event);
-                      print(allColumns[event.columnIdx].title.toLowerCase());
+                      // print(event);
+                      // print(allColumns[event.columnIdx].title.toLowerCase());
                       //if(event.columnIdx == 3){
                       if(allColumns[event.columnIdx].title.toLowerCase() == "reps"){
                         OnDataValuesChanged(event,"reps");
@@ -561,39 +651,9 @@ class _GridControlScoresState extends State<GridControlScores> {
                       // }
                     },
                     onSelected: (PlutoGridOnSelectedEvent event){
-                      //OnSelectionChanged(event);
-                      //print(event);
+                      print(event);
                     },
                     onRowDoubleTap: (PlutoGridOnRowDoubleTapEvent event){
-                      //OnSelectionChanged(event);
-                      //print("Double Tapped $event");
-                      // setState(() {
-                      //   if(stateManager.refRows[event.rowIdx].checked == false){
-                      //     stateManager.refRows[event.rowIdx].setChecked(true);
-                      //     BoardObjects[event.rowIdx].selected = true;
-                      //     stateManager.refRows[event.rowIdx].cells = {
-                      //     'id': PlutoCell(value: '${BoardObjects.indexOf(BoardObjects[event.rowIdx])+1}'),
-                      //     'selected': PlutoCell(value: '${BoardObjects[event.rowIdx].selected}'),
-                      //     'flag': PlutoCell(value: '${BoardObjects[event.rowIdx].flagImgName}'),
-                      //     'country': PlutoCell(value: '${BoardObjects[event.rowIdx].country}'),
-                      //     'name': PlutoCell(value: '${BoardObjects[event.rowIdx].name}'),
-                      //     'score': PlutoCell(value: '${BoardObjects[event.rowIdx].score}'),
-                      //     };
-                      //     print(BoardObjects[event.rowIdx].selected);
-                      //   }else{
-                      //     stateManager.refRows[event.rowIdx].setChecked(false);
-                      //     BoardObjects[event.rowIdx].selected = false;
-                      //     stateManager.refRows[event.rowIdx].cells = {
-                      //       'id': PlutoCell(value: '${BoardObjects.indexOf(BoardObjects[event.rowIdx])+1}'),
-                      //       'selected': PlutoCell(value: '${BoardObjects[event.rowIdx].selected}'),
-                      //       'flag': PlutoCell(value: '${BoardObjects[event.rowIdx].flagImgName}'),
-                      //       'country': PlutoCell(value: '${BoardObjects[event.rowIdx].country}'),
-                      //       'name': PlutoCell(value: '${BoardObjects[event.rowIdx].name}'),
-                      //       'score': PlutoCell(value: '${BoardObjects[event.rowIdx].score}'),
-                      //     };
-                      //     print(BoardObjects[event.rowIdx].selected);
-                      //   }
-                      // });
                     },
                     configuration: PlutoGridConfiguration(
                       enableMoveDownAfterSelecting: false,
@@ -624,11 +684,68 @@ class _GridControlScoresState extends State<GridControlScores> {
     }
   }
 
+  void upDateCurrentActiveSelectedPlayer(){
+    int index = selectActivePLayerList.indexOf(CurrenSelectedActivePlayer);
+
+    if(index == 0){
+      for(board_obj obj in BoardObjects){
+        int index_in = BoardObjects.indexOf(obj);
+          BoardObjects[index_in].selected = false;
+      }
+      UpdateDBData();
+    }else{
+      index = index-1; // We added 0 None so we reduce one index to macth our list of objects
+      for(board_obj obj in BoardObjects){
+        int index_in = BoardObjects.indexOf(obj);
+        if(index_in != index){
+          BoardObjects[index_in].selected = false;
+        }else{
+          BoardObjects[index_in].active = true;
+          BoardObjects[index_in].selected = true;
+        }
+      }
+      UpdateDBData();
+    }
+
+  }
+
+  void UpdateDBData(){
+    DatabaseReference ref = FirebaseDatabase.instance.ref("leaderboard/$EventKey");
+    Map<String, dynamic> maptest = HashMap();
+
+    for (board_obj obj_ in BoardObjects) {
+      maptest[obj_.id.toString()] = obj_.toJson();
+    }
+
+    ref.child("score_board").set(maptest).then((value) {
+
+    }).onError((error, stackTrace){
+      ShowSnackBar("Error Data not Saved");
+    }).whenComplete(() {
+      ShowSnackBar("Data Saved");
+    });
+
+  }
+
   void OnDataValuesChanged(PlutoGridOnChangedEvent event,String changed_value_key) async{
     //Map <String,PlutoCell> gotMap = stateManager.refRows[event.rowIdx].cells;
     WidgetsBinding.instance.addPostFrameCallback((_) =>  setState((){
-      BoardObjects[event.rowIdx].reps = event.value as int;
-      Update_Data_Values(event,changed_value_key);
+      if(allColumns[event.columnIdx].title.toLowerCase() == "reps"){
+        BoardObjects[event.rowIdx].reps = event.value as int;
+      }else if(allColumns[event.columnIdx].title.toLowerCase() == "distance"){
+        BoardObjects[event.rowIdx].distance = event.value as int;
+      }else if(allColumns[event.columnIdx].title.toLowerCase() == "time"){
+        BoardObjects[event.rowIdx].time = event.value as int;
+      }else if(allColumns[event.columnIdx].title.toLowerCase() == "score"){
+        BoardObjects[event.rowIdx].score = event.value as int;
+      }else if(allColumns[event.columnIdx].title.toLowerCase() == "total"){
+        BoardObjects[event.rowIdx].total = event.value as int;
+      }else if(allColumns[event.columnIdx].title.toLowerCase() == "place"){
+        BoardObjects[event.rowIdx].place = event.value as int;
+      }
+      if(autoUpdate == true) {
+        Update_Data_Values(event, changed_value_key);
+      }
     }));
   }
 
@@ -641,7 +758,7 @@ class _GridControlScoresState extends State<GridControlScores> {
       success = false;
     });
     if(success){
-      ShowSnackBar("Scores Updated");
+      ShowSnackBar("$changed_value_key Updated");
       return true;
     }else{
       return false;

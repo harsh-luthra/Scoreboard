@@ -5,7 +5,9 @@ import 'dart:collection';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:implicitly_animated_list/implicitly_animated_list.dart';
+import 'package:leaderboard/AppConstants.dart';
 import 'package:leaderboard/Grid_Control_Scores.dart';
 import 'package:leaderboard/leaderboard.dart';
 import 'package:leaderboard/leaderboard_control.dart';
@@ -41,39 +43,42 @@ class _leaderboardAllListState extends State<leaderboard_all_list> {
   }
 
   void Load_List_OF_DATA() async{
-    DatabaseReference starCountRef =
-    FirebaseDatabase.instance.ref("leaderboard");
-    final snapshot = await starCountRef.get();
-    if (snapshot.exists){
-      All_Event_Titles = [];
-      All_Event_Keys = [];
-      print(snapshot.key);
-      Iterable allData = snapshot.children;
-      if(allData.length == 1){
-        DataSnapshot dt = allData.first as DataSnapshot;
-        if(dt.key == "sample"){
-          ShowSnackBar('No data available.');
-          print('No data available.');
-          return;
+    DatabaseReference starCountRef = FirebaseDatabase.instance.ref("leaderboard");
+    //final snapshot = await starCountRef.get();
+    //final snapshot = await starCountRef.get();
+    await starCountRef.onValue.listen((DatabaseEvent event) {
+      final snapshot = event.snapshot;
+      if (snapshot.exists){
+        All_Event_Titles = [];
+        All_Event_Keys = [];
+        print(snapshot.key);
+        Iterable allData = snapshot.children;
+        if(allData.length == 1){
+          DataSnapshot dt = allData.first as DataSnapshot;
+          if(dt.key == "sample"){
+            ShowSnackBar('No data available.');
+            print('No data available.');
+            return;
+          }
         }
-      }
-      for(DataSnapshot snap in allData){
-        if(snap.key! == "sample" || snap.key! == "null"){
-          continue;
+        for(DataSnapshot snap in allData){
+          if(snap.key! == "sample" || snap.key! == "null"){
+            continue;
+          }
+          All_Event_Keys.add(snap.key!);
+          All_Event_Titles.add(snap.child("title").value.toString());
         }
-        All_Event_Keys.add(snap.key!);
-        All_Event_Titles.add(snap.child("title").value.toString());
+        if(mounted) {
+          setState(() {
+            All_Event_Titles = All_Event_Titles;
+          });
+        }
+        ShowSnackBar('Data Loaded.');
+      } else {
+        ShowSnackBar('No data available.');
+        print('No data available.');
       }
-      if(mounted) {
-        setState(() {
-          All_Event_Titles = All_Event_Titles;
-        });
-      }
-      ShowSnackBar('Data Loaded.');
-    } else {
-      ShowSnackBar('No data available.');
-      print('No data available.');
-    }
+    });
   }
 
   @override
@@ -91,7 +96,12 @@ class _leaderboardAllListState extends State<leaderboard_all_list> {
           mainAxisSize: MainAxisSize.max,
           children: [
               const SizedBox(height: 50,),
-              const Text("ALL EVENTS LIST",style: TextStyle(fontSize: 25)),
+            Text("ALL EVENTS LIST",style: TextStyle(fontSize: 25,fontWeight: FontWeight.w600)),
+              // Text("ALL EVENTS LIST",style: GoogleFonts.montserrat(
+              //     fontSize: 25,
+              //     fontWeight: FontWeight.w600,
+              //     fontStyle: FontStyle.normal,
+              // ),),
               const SizedBox(height: 25,),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -113,13 +123,13 @@ class _leaderboardAllListState extends State<leaderboard_all_list> {
                 ],
               ),
               const SizedBox(height: 15,),
-              Expanded(
+            All_Event_Titles.length > 0 ? Expanded(
                 child: ImplicitlyAnimatedList<String>(
                     itemData: All_Event_Titles,
                     itemBuilder: (context, dataU) {
                       return Show_List_of_Events(deviceWidth, dataU);
                     }),
-              ),
+              ) : Text("No Events Added Press + to add."),
             ],
           ),
         ),
@@ -206,9 +216,18 @@ class _leaderboardAllListState extends State<leaderboard_all_list> {
                     ),
                     const SizedBox(width: 5,),
                     ElevatedButton(
+                      style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.red)),
+                      onPressed: () {
+                        //deleteEventFromDb(index);
+                        copyEvent(index);
+                      },
+                      child: const Icon(Icons.copy_all,size: 25,),
+                    ),
+                    const SizedBox(width: 5,),
+                    ElevatedButton(
                       style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.amber)),
                       onPressed: () {
-                        Open_Score_Editor(index);
+                        openScoreEditor(index);
                       },
                       child: const Icon(Icons.settings,size: 25,),
                     ),
@@ -266,6 +285,7 @@ class _leaderboardAllListState extends State<leaderboard_all_list> {
   }
 
   void openEditor(int index) async{
+    print("EDIT ${index} : ${All_Event_Keys[index]}");
     if(kIsWeb){
       html.window.location.href = "#editor?event_key=${All_Event_Keys[index]}&editing=true";
     }else{
@@ -305,7 +325,7 @@ class _leaderboardAllListState extends State<leaderboard_all_list> {
         });
   }
 
-  void Open_Score_Editor(int index){
+  void openScoreEditor(int index){
     if(kIsWeb){
       html.window.location.href = "#control?event_key=${All_Event_Keys[index]}&route=control";
     }else{
@@ -330,20 +350,96 @@ class _leaderboardAllListState extends State<leaderboard_all_list> {
     }
   }
 
+  void copyEvent(int index){
+    String key = All_Event_Keys[index];
+    String title = All_Event_Titles[index];
+
+    String copiedEventKey = mainDataKeyDB = DateTime.now().millisecondsSinceEpoch.toString();
+
+    List<board_obj> tempCopiedData = [];
+
+    DatabaseReference starCountRef = FirebaseDatabase.instance.ref("leaderboard/$key");
+
+    starCountRef.get().then((value){
+      Iterable childs = value.child("score_board").children;
+      String title = value.child("title").value as String;
+      title = "${title}_Copied";
+      String data_type = value.child("type").value as String;
+      for(DataSnapshot snap in childs){
+        print(snap.value.toString());
+        Map<String,dynamic> tempMap = HashMap();
+        snap.children.forEach((element) {
+          tempMap[element.key.toString()] = element.value;
+        });
+        tempCopiedData.add(board_obj.fromJson(tempMap));
+      }
+
+      if(tempCopiedData.isNotEmpty){
+
+        for(board_obj obj in tempCopiedData){
+          obj.reps = 0;
+          obj.distance = 0;
+          obj.time = 0;
+          obj.score = 0;
+          obj.total = 0;
+          obj.place = 0;
+        }
+
+        saveCopiedToDB(tempCopiedData,title,data_type,copiedEventKey);
+      }
+
+    });
+
+  }
+
+  void saveCopiedToDB(List<board_obj> data,String Event_Title,String selectedEventDatatype,String newEventKey) {
+    DatabaseReference ref = FirebaseDatabase.instance.ref("leaderboard/$newEventKey");
+    Map<String, dynamic> maptest = HashMap();
+
+    for (board_obj obj_ in data) {
+      maptest[obj_.id.toString()] = obj_.toJson();
+    }
+
+    Map<dynamic, dynamic> map_to_save = HashMap();
+
+    map_to_save["title"] = Event_Title;
+    map_to_save["type"] = selectedEventDatatype;
+    map_to_save["score_board"] = maptest;
+
+    ref.set(map_to_save).then((value) {}).onError((error, stackTrace) {})
+        .whenComplete(() {
+      if(kIsWeb){
+        html.window.location.href = "#editor?event_key=${newEventKey}&editing=true";
+      }else{
+        // scores?event_key=1678711717666&route=scores
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => leaderboard_creator(got_is_Editing: true,got_MainKey: newEventKey,),
+            ));
+      }
+    });
+  }
+
   void deleteEventFromDb(int index){
     String key = All_Event_Keys[index];
     String title = All_Event_Titles[index];
     DatabaseReference starCountRef =
     FirebaseDatabase.instance.ref("leaderboard");
     starCountRef.child(key).remove().then((value){
-      ShowSnackBar("$title Event Deleted");
-      showAlertDialog(context,"$title Event Deleted");
+      print('TestWidget: ${ModalRoute.of(context)?.isCurrent}');
+      // ShowSnackBar("$title Event Deleted");
+      // showAlertDialog(context,"$title Event Deleted");
       setState(() {
-        All_Event_Titles.removeAt(index);
-        All_Event_Keys.removeAt(index);
+        // All_Event_Titles.removeAt(index);
+        // All_Event_Keys.removeAt(index);
       });
     }).onError((error, stackTrace){
+      print(stackTrace.toString());
       ShowSnackBar("Failed to Delete $title ");
+      showAlertDialog(context,"Failed to Delete $title Event.");
+    }).whenComplete(() {
+      ShowSnackBar("$title Event Deleted");
       showAlertDialog(context,"$title Event Deleted");
     });
   }
@@ -375,7 +471,9 @@ class _leaderboardAllListState extends State<leaderboard_all_list> {
 
   void ShowSnackBar(String textToShow){
     var snackBar = SnackBar(content: Text(textToShow));
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    if(ModalRoute.of(context)?.isCurrent == true){
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    }
   }
 
 }

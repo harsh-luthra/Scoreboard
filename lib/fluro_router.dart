@@ -20,7 +20,7 @@ class FluroRouterR {
       String event_key = params["event_key"];
       return GridControlScores(Event_Key: event_key,);
     }else{
-      return GridControlScores(Event_Key: "1678891316047",);
+      return GridControlScores(Event_Key: "1679132326951",);
     }
   });
 
@@ -63,7 +63,7 @@ class FluroRouterR {
       String event_key = params["event_key"];
       return leaderboard(Event_Key: event_key,);
     }else{
-      return leaderboard(Event_Key: "1678891316047",);
+      return leaderboard(Event_Key: "1679132326951",);
       //return leaderboard_all_list();
     }
   });
