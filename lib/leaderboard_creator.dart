@@ -486,6 +486,7 @@ class _leaderboard_creatorState extends State<leaderboard_creator> {
     map_to_save["title"] = Event_Title;
     map_to_save["type"] = selectedEventDatatype;
     map_to_save["score_board"] = maptest;
+    map_to_save["compact_mode"] = false;
 
     ref.set(map_to_save).then((value) {
       setState(() {});

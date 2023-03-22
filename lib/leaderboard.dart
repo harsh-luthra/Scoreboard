@@ -13,7 +13,7 @@ import 'package:leaderboard/board_obj.dart';
 String SampleTest = "None";
 bool full = true;
 bool compact_mode = false;
-
+String eventTitle = "Event Title";
 List<board_obj> data = [];
 
 final List<String> event_data_types = [
@@ -70,6 +70,7 @@ class _leaderboardState extends State<leaderboard> {
       if(mounted) {
         setState(() {
           if (data.isEmpty) {
+            eventTitle = event.snapshot.child("title").value.toString();
             selectedEventDatatype = event.snapshot.child("type").value.toString();
             Replace_data_to_New(BoardObjects);
             sort_active();
@@ -78,6 +79,7 @@ class _leaderboardState extends State<leaderboard> {
             //data.sort((a, b) => a.name.toString().compareTo(b.name.toString()));
             //data = data.reversed.toList();
           }
+          compact_mode = event.snapshot.child("compact_mode").value as bool;
           last_index = 0;
           sort_active();
           test_single_value(BoardObjects);
@@ -284,47 +286,79 @@ class _leaderboardState extends State<leaderboard> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
-        child: AnimatedContainer(
-          duration: Duration(seconds: 1),
-          width: !compact_mode ? device_width*0.8 : device_width *0.6,
-          child: Column(
-            children: [
-              SizedBox(height: 5,),
-              ElevatedButton(
-                  onPressed: () {
-                    //SET_DATA();
-                    setState(() {
-                      compact_mode = !compact_mode;
-                      // data.sort((a, b) => a.score.toString().compareTo(b.score.toString()));
-                      //data = data.reversed.toList();
-                      //full = !full;
-                      //data.shuffle();
-                    });
-                  },
-                  child: Text("Toogle Mode")),
-              // ElevatedButton(
-              //     onPressed: () {
-              //       //SET_DATA();
-              //       setState(() {
-              //         //data.sort((a, b) => a.toString().compareTo(b.toString()));
-              //         //data = data.reversed.toList();
-              //         //full = !full;
-              //         //data.shuffle();
-              //       });
-              //     },
-              //     child: Text("GET DATA")),
-              SizedBox(height: 50,),
-              Expanded(
-                child: ImplicitlyAnimatedList<board_obj>(
-                  insertDuration: Duration(seconds: 1),
-                  deleteDuration: Duration(seconds: 1),
-                    itemData: data,
-                    itemBuilder: (context, dataU) {
-                      return ScoreData_anim(device_width, dataU);
-                    }),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            UnconstrainedBox(
+              child: Container(
+                margin: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(10),
+                color: Colors.black,
+                child: Row(
+                  children: [
+                    const SizedBox(width: 10),
+                    Container(
+                        width: 125,
+                        height: 65,
+                        decoration: const BoxDecoration(
+                          image:
+                          DecorationImage(image: AssetImage('assets/images/event_logo.png'), fit: BoxFit.fill),
+                        )),
+                    const SizedBox(width: 10),
+                    UnconstrainedBox(
+                      child: Text(eventTitle.toUpperCase(),style: const TextStyle(fontSize: 25,fontWeight: FontWeight.w600,color: Colors.white), textAlign: TextAlign.center,),
+                    ),
+                    const SizedBox(width: 10),
+                  ],
+                ),
               ),
-            ],
-          ),
+            ),
+            AnimatedContainer(
+              duration: Duration(seconds: 1),
+              height: device_height * 0.8,
+              width: !compact_mode ? device_width*0.8 : device_width *0.6,
+              child: Column(
+                children: [
+                  // SizedBox(height: 1,),
+                  // ElevatedButton(
+                  //     onPressed: () {
+                  //       //SET_DATA();
+                  //       setState(() {
+                  //         compact_mode = !compact_mode;
+                  //         // data.sort((a, b) => a.score.toString().compareTo(b.score.toString()));
+                  //         //data = data.reversed.toList();
+                  //         //full = !full;
+                  //         //data.shuffle();
+                  //       });
+                  //     },
+                  //     child: Text("Toogle Mode")),
+                  // ElevatedButton(
+                  //     onPressed: () {
+                  //       //SET_DATA();
+                  //       setState(() {
+                  //         //data.sort((a, b) => a.toString().compareTo(b.toString()));
+                  //         //data = data.reversed.toList();
+                  //         //full = !full;
+                  //         //data.shuffle();
+                  //       });
+                  //     },
+                  //     child: Text("GET DATA")),
+                  SizedBox(height: 15,),
+                  Expanded(
+                    child: ImplicitlyAnimatedList<board_obj>(
+                      insertDuration: Duration(seconds: 1),
+                      deleteDuration: Duration(seconds: 1),
+                        itemData: data,
+                        itemBuilder: (context, dataU) {
+                          return ScoreData_anim(device_width, dataU);
+                        }),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

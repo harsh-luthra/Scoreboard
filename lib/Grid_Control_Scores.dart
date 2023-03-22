@@ -12,6 +12,8 @@ import 'board_obj.dart';
 String eventTitle = "Event Title";
 String? EventKey;
 
+bool Compact_Mode = false;
+
 final List<String> event_data_types = [
   "Reps",
   "Reps,Time",
@@ -68,8 +70,11 @@ class _GridControlScoresState extends State<GridControlScores> {
       final dataSnap = event.snapshot.child("score_board").value;
       Iterable childs = event.snapshot.child("score_board").children;
       if(BoardObjects.isEmpty) {
-        eventTitle = event.snapshot.child("title").value.toString();
-        selectedEventDatatype = event.snapshot.child("type").value.toString();
+        setState(() {
+          eventTitle = event.snapshot.child("title").value.toString();
+          selectedEventDatatype = event.snapshot.child("type").value.toString();
+          Compact_Mode = event.snapshot.child("compact_mode").value as bool;
+        });
         createColumnsFromData();
       }
       List<board_obj> tempBoardobjects = [];
@@ -87,6 +92,7 @@ class _GridControlScoresState extends State<GridControlScores> {
       if(mounted){
         print("GRID ALL LOADED AGAINA");
         setState(() {
+          Compact_Mode = event.snapshot.child("compact_mode").value as bool;
           if(BoardObjects.isEmpty) {
             BoardObjects = tempBoardobjects;
             addDataToSelectCurrentPlayerList();
@@ -597,6 +603,22 @@ class _GridControlScoresState extends State<GridControlScores> {
                         });
                       }),
                     ),
+                    const SizedBox(width: 50,),
+                    Column(
+                      children: [
+                        Text("Toggle Compact Mode", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.green),),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            toggleCompactMode();
+                          },
+                          child: Text( Compact_Mode == true ? "Showing Country" : "Showing Names"
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
                 const SizedBox(
@@ -706,6 +728,21 @@ class _GridControlScoresState extends State<GridControlScores> {
       }
       UpdateDBData();
     }
+
+  }
+
+  void toggleCompactMode(){
+    setState(() {
+      Compact_Mode = !Compact_Mode;
+    });
+
+    DatabaseReference ref = FirebaseDatabase.instance.ref("leaderboard/$EventKey");
+    ref.child("compact_mode").set(Compact_Mode).then((value) {
+    }).onError((error, stackTrace){
+      ShowSnackBar("Error Data not Saved");
+    }).whenComplete(() {
+      ShowSnackBar("Mode Changed");
+    });
 
   }
 
@@ -861,7 +898,7 @@ class _GridControlScoresState extends State<GridControlScores> {
   }
 
   void ShowSnackBar(String textToShow){
-    var snackBar = SnackBar(content: Text(textToShow));
+    var snackBar = SnackBar(content: Text(textToShow),duration: Duration(seconds: 1));
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
