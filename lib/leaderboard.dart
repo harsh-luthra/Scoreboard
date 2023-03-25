@@ -469,7 +469,7 @@ Widget Stacked_Score_Data(index,board_obj data_obj, Color Active_Color){
               const SizedBox(
                 width: 10,
               ),
-              Text(compact_mode != true ? " ${data_obj.name}".toUpperCase() : " ${data_obj.country}".toUpperCase(),style: TextStyle(fontSize: 25,fontWeight: FontWeight.w600),),
+              Text(compact_mode != true ? " ${data_obj.name}".toUpperCase() : " ${data_obj.name}".toUpperCase(),style: TextStyle(fontSize: 25,fontWeight: FontWeight.w600),),
               const SizedBox(
                 width: 10,
               ),

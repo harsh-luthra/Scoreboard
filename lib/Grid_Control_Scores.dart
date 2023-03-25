@@ -617,7 +617,7 @@ class _GridControlScoresState extends State<GridControlScores> {
                             onPressed: () {
                               toggleCompactMode();
                             },
-                            child: Text( Compact_Mode == true ? "Showing Country" : "Showing Names"
+                            child: Text( Compact_Mode == true ? "Compact Mode" : "Normal Mode"
                             ),
                           ),
                         ],
