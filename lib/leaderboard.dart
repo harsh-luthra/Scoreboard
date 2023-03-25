@@ -284,7 +284,7 @@ class _leaderboardState extends State<leaderboard> {
     double? device_width = MediaQuery.of(context).size.width;
     double? device_height = MediaQuery.of(context).size.height;
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.black,
       body: SafeArea(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,

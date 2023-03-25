@@ -7,7 +7,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:implicitly_animated_list/implicitly_animated_list.dart';
-import 'package:leaderboard/AppConstants.dart';
 import 'package:leaderboard/Grid_Control_Scores.dart';
 import 'package:leaderboard/leaderboard.dart';
 import 'package:leaderboard/leaderboard_control.dart';

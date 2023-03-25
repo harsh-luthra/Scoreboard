@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:leaderboard/leaderboard.dart';
 import 'package:leaderboard/leaderboard_control.dart';
-import 'package:leaderboard/leaderboard_creator.dart';
 
 import 'firebase_options.dart';
 import 'fluro_router.dart';

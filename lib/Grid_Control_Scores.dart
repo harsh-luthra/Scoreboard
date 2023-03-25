@@ -1,11 +1,13 @@
 import 'dart:collection';
 import 'dart:convert';
 
+import 'package:cross_scroll/cross_scroll.dart';
 import 'package:file_saver/file_saver.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:pluto_grid/pluto_grid.dart';
 import 'package:pluto_grid_export/pluto_grid_export.dart' as pluto_grid_export;
+import 'package:universal_html/html.dart';
 
 import 'board_obj.dart';
 
@@ -403,7 +405,7 @@ class _GridControlScoresState extends State<GridControlScores> {
     PlutoColumn time_col = PlutoColumn(
       title: 'Time',
       field: 'time',
-      type: PlutoColumnType.number(),
+      type: PlutoColumnType.number(format: '#,###.##'),
       enableColumnDrag: false,
       enableRowDrag: false,
       readOnly: false,
@@ -528,98 +530,100 @@ class _GridControlScoresState extends State<GridControlScores> {
                 const SizedBox(
                   height: 15,
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Text("Black Theme",style:
-                    TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: TextColorTheme),),
-                    const SizedBox(
-                      width: 15,
-                    ),
-                    Container(
-                      color: IsBlackThemeMode == true ? Colors.black : Colors.white,
-                      child: Checkbox(value: IsBlackThemeMode, onChanged: (b){
-                        //print("STR CurrenSelectedActivePlayer");
-                        setState(() {
-                          IsBlackThemeMode = b!;
-                          //TextColorTheme = IsBlackThemeMode == true ? Colors.white : Colors.black;
-                        });
-                      }),
-                    ),
-                    const SizedBox(
-                      width: 50,
-                    ),
-                    Column(
-                      children: [
-                        Text("Select Current Active Player", style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.green),),
-                        DropdownButton(
-                          value: CurrenSelectedActivePlayer,
-                          items: selectActivePLayerList.map((String items) {
-                            return DropdownMenuItem(
-                              value: items,
-                              child: Text(items, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),),
-                            );
-                          }).toList(),
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              print(newValue);
-                              CurrenSelectedActivePlayer = newValue!;
-                              upDateCurrentActiveSelectedPlayer();
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      width: 50,
-                    ),
-                    Column(
-                      children: [
-                        Text("Toggle Auto Update Data", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.green),),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            UpdateDBData();
-                          },
-                          child: const Text(
-                            "UPDATE"
+                SingleChildScrollView(
+                  physics: ClampingScrollPhysics(),
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text("Black Theme",style:
+                      TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: TextColorTheme),),
+                      const SizedBox(
+                        width: 15,
+                      ),
+                      Container(
+                        color: IsBlackThemeMode == true ? Colors.black : Colors.white,
+                        child: Checkbox(value: IsBlackThemeMode, onChanged: (b){
+                          //print("STR CurrenSelectedActivePlayer");
+                          setState(() {
+                            IsBlackThemeMode = b!;
+                            //TextColorTheme = IsBlackThemeMode == true ? Colors.white : Colors.black;
+                          });
+                        }),
+                      ),
+                      const SizedBox(
+                        width: 50,
+                      ),
+                      Column(
+                        children: [
+                          Text("Select Current Active Player", style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.green),),
+                          DropdownButton(
+                            value: CurrenSelectedActivePlayer,
+                            items: selectActivePLayerList.map((String items) {
+                              return DropdownMenuItem(
+                                value: items,
+                                child: Text(items, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),),
+                              );
+                            }).toList(),
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                print(newValue);
+                                CurrenSelectedActivePlayer = newValue!;
+                                upDateCurrentActiveSelectedPlayer();
+                              });
+                            },
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      width: 10,
-                    ),
-                    Container(
-                      color: autoUpdate == true ? Colors.black : Colors.white,
-                      child: Checkbox(value: autoUpdate, onChanged: (b){
-                        setState(() {
-                          autoUpdate = b!;
-                          //TextColorTheme = IsBlackThemeMode == true ? Colors.white : Colors.black;
-                        });
-                      }),
-                    ),
-                    const SizedBox(width: 50,),
-                    Column(
-                      children: [
-                        Text("Toggle Compact Mode", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.green),),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            toggleCompactMode();
-                          },
-                          child: Text( Compact_Mode == true ? "Showing Country" : "Showing Names"
+                        ],
+                      ),
+                      const SizedBox(
+                        width: 50,
+                      ),
+                      Column(
+                        children: [
+                          Text("Toggle Auto Update Data", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.green),),
+                          const SizedBox(
+                            height: 10,
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          ElevatedButton(
+                            onPressed: () {
+                              UpdateDBData();
+                            },
+                            child: const Text(
+                              "UPDATE"
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      Container(
+                        color: autoUpdate == true ? Colors.black : Colors.white,
+                        child: Checkbox(value: autoUpdate, onChanged: (b){
+                          setState(() {
+                            autoUpdate = b!;
+                            //TextColorTheme = IsBlackThemeMode == true ? Colors.white : Colors.black;
+                          });
+                        }),
+                      ),
+                      const SizedBox(width: 50,),
+                      Column(
+                        children: [
+                          Text("Toggle Compact Mode", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.green),),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              toggleCompactMode();
+                            },
+                            child: Text( Compact_Mode == true ? "Showing Country" : "Showing Names"
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(
                   height: 15,
@@ -772,7 +776,7 @@ class _GridControlScoresState extends State<GridControlScores> {
       }else if(allColumns[event.columnIdx].title.toLowerCase() == "distance"){
         BoardObjects[event.rowIdx].distance = event.value as int;
       }else if(allColumns[event.columnIdx].title.toLowerCase() == "time"){
-        BoardObjects[event.rowIdx].time = event.value as int;
+        BoardObjects[event.rowIdx].time = event.value as double;
       }else if(allColumns[event.columnIdx].title.toLowerCase() == "score"){
         BoardObjects[event.rowIdx].score = event.value as int;
       }else if(allColumns[event.columnIdx].title.toLowerCase() == "total"){

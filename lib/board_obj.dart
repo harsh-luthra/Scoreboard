@@ -5,7 +5,7 @@ class board_obj{
   String? country;
   int reps = 0;
   int distance = 0;
-  int time = 0;
+  double time = 0;
   int score = 0;
   int total = 0;
   int place = 0;
@@ -35,7 +35,7 @@ class board_obj{
         country = json['country'] as String,
         reps = json['reps'] as int,
         distance = json['distance'] as int,
-        time = json['time'] as int,
+        time = json['time'] as double,
         score = json['score'] as int,
         total = json['total'] as int,
         place = json['place'] as int,
